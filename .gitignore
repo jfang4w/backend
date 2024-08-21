@@ -1,0 +1,6 @@
+# OS metadata
+.DS_store
+Thumbs.db
+
+# node related stuff
+node_modules
