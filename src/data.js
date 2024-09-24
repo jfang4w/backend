@@ -8,6 +8,7 @@ let data = {
             password: "password123",
             passwordAttempt: 0,
             accountCreateDate: "2024-08-16",
+            publishedArticles: [articleId]
             activeSessions: [
                 1, 2, 3
             ]
@@ -17,6 +18,7 @@ let data = {
         /*{
             id: 1
             content: "some content",
+            summary: "",
             author: "Ody Zhou",
             initialCreateTime: "08/16/2024 13:02:09",
             lastEditTime: "08/16/2024 13:05:09",
@@ -38,6 +40,8 @@ let data = {
         }*/
     ]
 };
+
+
 
 /** Return the users and quizzes data store in the dataStore.ts
  *

@@ -36,3 +36,29 @@ export function isValidUsername(username) {
 export function isValidName(name) {
     return /^[a-zA-Z-' ]{2,20}$/.test(name);
 }
+
+export function isValidSession(veri_session) {
+    data = getData();
+    //data.sessions.find(session => session.sessionId = veri_session.sessionId);
+    return true;
+} 
+
+export function isValidArticleName(name) {
+    return name.length > 0;
+}
+
+export function isValidSummary(summary) {
+    return summary.length > 0;
+}
+
+export function isValidContent(content) {
+    return content.length > 0;
+}
+
+export function isValidArticle(articleId) {
+    data = getData();
+    if (data.articles.find(article => article.Id === articleId) != null) {
+        return true;
+    }
+    return false;
+}
