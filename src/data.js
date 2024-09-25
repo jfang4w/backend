@@ -38,6 +38,17 @@ let data = {
                 },
             ]
         }*/
+    ],
+    dm: [
+        /* {
+            id: 1,
+            userId1: 1,
+            userId2: 2,
+            messages: [
+                { author: 1, message: "Hello", time: "2024/9/16 16:11" },
+                { author: 2, message: "Hi", time: "2024/9/16 16:12" }
+            ]
+        }*/
     ]
 };
 

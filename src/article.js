@@ -110,3 +110,31 @@ export function articleUpdate(session, name, summary, content, targetArticle, ne
     setData(data);
     return {};
 }
+
+export function getArticleDetails(articleId) {
+    const data = getData();
+    const article = data.articles.find(element => element.id === articleId);
+    if (!article) {
+        throw new Error('Article not found');
+    }
+    return article;
+}
+
+export function addComment(articleId, userId, commentContent) {
+    const data = getData();
+    const articleIndex = data.articles.findIndex(element => element.id === articleId);
+    if (articleIndex === -1) {
+        throw new Error('Article not found');
+    }
+
+    const newComment = {
+        content: commentContent,
+        author: userId,
+        time: new Date().toISOString(),
+        reply: []
+    };
+
+    data.articles[articleIndex].comments.push(newComment);
+    setData(data);
+    return newComment;
+}
