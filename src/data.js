@@ -17,16 +17,23 @@ let data = {
     articles: [
         /*{
             id: 1
+            title: "some title",
+            summary: "some summary",
             content: "some content",
-            summary: "",
             author: "Ody Zhou",
             initialCreateTime: "08/16/2024 13:02:09",
             lastEditTime: "08/16/2024 13:05:09",
             nextChap: 2,
+            rating: 5
+            long: False
+            price: 0,
+            tags: [ "Blog" ],
             comments: [
                 {
                     content: "some comments",
                     author: 2,
+                    liked: 10,
+                    hate: 10
                     time: "08/16/2024 13:05:09"
                     reply: [
                         {
