@@ -48,7 +48,7 @@ export function articleUpload(session, name, summary, content, previousArticleId
     
     articleId = data.articles.length; //need to change, if article is deleted repeated id will appear
 
-    previousArticle = data.articles.find(article => article.id === previousArticleId);
+    const previousArticle = data.articles.find(article => article.id === previousArticleId);
     previousArticle.nextChap = articleId;
     const date = new Date();
     data.articles.push({
@@ -99,7 +99,7 @@ export function articleUpdate(session, name, summary, content, targetArticle, ne
         throw new Error("Invalid article Id.");
     }
 
-    article = data.articles.find(article => article.id === targetArticle);
+    const article = data.articles.find(article => article.id === targetArticle);
     
     article.content = content;
     article.summary = summary;
