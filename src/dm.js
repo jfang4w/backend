@@ -4,7 +4,7 @@ import {
     getData,
     ChatRoom,
     Messages
-} from "data.js";
+} from "./data.js";
 import {By, Target} from "./const.js";
 
 export function createRoom(uid) {
