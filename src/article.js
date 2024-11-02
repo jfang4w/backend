@@ -109,8 +109,7 @@ export function articleUpdate(session, title, summary, content, rating, long, pr
         throw new Error("Invalid article Id.");
     }
 
-    const articleIndex = getIndex(Target.article, targetArticleId);
-    const article = getData(Target.article, By.index, articleIndex);
+    const article = getData(Target.article, By.id, targetArticleId);
 
     updateData(new Articles(
         targetArticleId,
@@ -134,6 +133,14 @@ export function getArticleDetails(articleId) {
     return getData(Target.article, By.id, articleId);
 }
 
+
+/**
+ * 
+ * @param {number[]} articleId the parent ids
+ * @param {number} userId
+ * @param {string} commentContent
+ * @returns {{author: *, hate: *, time: *, reply: [*], content: *, liked: *}}
+ */
 export function addComment(articleId, userId, commentContent) {
     return addComments(userId, articleId, commentContent);
 }
