@@ -351,11 +351,7 @@ export function addData(newValue) {
 }
 
 export function newId(target) {
-    let data = target;
-    if (typeof target === 'number') {
-        data = getVariable(target);
-    }
-
+    const data = getVariable(target);
     let insert = false;
     let index = 0;
 
@@ -378,9 +374,17 @@ function  newCommentId(parentIds) {
     for (let i = 1; i < parentIds.length; i++) {
         comment = comment.find(comment => comment.id === parentIds[i]).comments;
     }
+    let insert = false;
+    let index = 0;
 
-    const thisId = newId(comment);
-    return parentIds.concat(thisId);
+    for (; index < comment.length; index++) {
+        if (comment[index].id[comment[index].id.length-1] !== index) {
+            insert = true;
+            break;
+        }
+    }
+
+    return insert? index: comment.length;
 }
 
 export function addComments(userId, parentIds, content) {
