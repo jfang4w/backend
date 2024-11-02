@@ -1,26 +1,26 @@
 import {
+    newId,
+    updateData,
     getData,
-    setData
+    ChatRoom,
+    Messages
 } from "data.js";
+import {By, Target} from "./const.js";
 
-export function createDm(userId1, userId2, message) {
-    const data = getData();
-    data.dm.push({
-        id: data.dm.length + 1,
-        userId1: userId1,
-        userId2: userId2,
-        messages: [
-            { author: userId1, message: message, time: Math.floor(Date.now() / 1000) }
-        ]
-    });
-    setData(data);
+export function createRoom(uid) {
+    updateData(new ChatRoom(
+        newId(Target.room),
+        uid,
+        []
+    ));
 }
 
-export function sendDm(dmId, author, message) {
-    const data = getData();
-    data.dm[dmId].messages.push({
-        author: author,
-        message: message,
-        time: Math.floor(Date.now() / 1000)
-    });
+export function sendMessage(roomId, author, message) {
+    let room = getData(Target.room, By.id, roomId);
+    room.message.push(new Messages(
+        author,
+        message,
+        new Date()));
+
+    updateData(room);
 }
