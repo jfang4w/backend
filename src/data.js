@@ -77,6 +77,7 @@ export class Comments {
 
     json() {
         return {
+            id: this.id,
             content: this.content,
             author: this.author,
             liked: this.liked,
@@ -100,11 +101,11 @@ export class Replies extends Comments {
      * @param {number} hate - The number of dislikes for the reply.
      * @param {Date} time - The time the reply was made.
      * @param {Replies[]} replay - An array of replies to this reply.
-     * @param {number[]} parents - An array of ids of parent replies or comments.
+     * @param {number} parent - The id of parent reply/comment.
      */
-    constructor(id, content, author, liked, hate, time, replay, parents) {
+    constructor(id, content, author, liked, hate, time, replay, parent) {
         super(id, content, author, liked, hate, time, replay);
-        this.parents = parents;
+        this.parent = parent;
     }
 }
 
@@ -373,9 +374,12 @@ export function addPublishedArticles(userId, articleId) {
 
 function  newCommentId(parentIds) {
     let comment = getData(Target.article, By.id, parentIds[0]).comments;
+    let indexes = [getIndex(Target.article, parentIds[0])];
     for (let i = 1; i < parentIds.length; i++) {
-        comment = comment.find(comment => comment.id === parentIds[i]).comments;
+        indexes.push(comment.findIndex(comment => comment.id[comment.id.length-1] === parentIds[i]));
+        comment = comment.find(comment => comment.id[comment.id.length-1] === parentIds[i]).reply;
     }
+
     let insert = false;
     let index = 0;
 
@@ -386,7 +390,7 @@ function  newCommentId(parentIds) {
         }
     }
 
-    return insert? index: comment.length;
+    return [insert? index: comment.length].concat(indexes);
 }
 
 export function addComments(userId, parentIds, content) {
