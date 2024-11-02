@@ -1,7 +1,6 @@
 import {
     updateData,
     newId,
-    getIndex,
     addPublishedArticles,
     addComments,
     getData,
@@ -55,7 +54,7 @@ function validate(session, name, summary, content) {
 export function articleUpload({session, title, summary, content, long, price, tags, previousArticleId}) {
     validate(session, title, summary, content);
 
-    const articleId = newId(1);
+    const articleId = newId(Target.article);
     const date = new Date();
 
     if (isValidArticle(previousArticleId)) {
@@ -136,11 +135,11 @@ export function getArticleDetails(articleId) {
 
 /**
  * 
- * @param {number[]} articleId the parent ids
+ * @param {number[]} parentIds the parent ids (i.e. [<article id>, <parent comments/replies ids>])
  * @param {number} userId
  * @param {string} commentContent
  * @returns {{author: *, hate: *, time: *, reply: [*], content: *, liked: *}}
  */
-export function addComment(articleId, userId, commentContent) {
-    return addComments(userId, articleId, commentContent);
+export function addComment(parentIds, userId, commentContent) {
+    return addComments(userId, parentIds, commentContent);
 }
