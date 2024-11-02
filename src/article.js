@@ -1,6 +1,12 @@
 import {
+    updateData,
+    newId,
+    getIndex,
+    addPublishedArticles,
+    addComments,
     getData,
-    setData
+    Articles,
+    addData
 } from "./data.js";
 
 import { 
@@ -11,21 +17,10 @@ import {
     isValidSummary
 } from "./utils/validations.js";
 
+import {By, Target} from "./const.js";
 
-/**
- * Add new article from user to data base
- *
- * @param {Session} session - User's session used to add new article
- * @param {string} name - The new article's name
- * @param {string} summary - The new article's summary
- * @param {string} content - The new article's text content
- * @param {integer} previousArticleId - Previous chapter's article's id
- * @returns {} return empty object if upload success
- */
-export function articleUpload(session, name, summary, content, previousArticleId) {
-    const data = getData();
-    const id = data.articles.length;
-    
+
+function validate(session, name, summary, content) {
     if (!isValidSession(session)) {
         throw new Error('Invalid user session.');
     }
@@ -41,100 +36,104 @@ export function articleUpload(session, name, summary, content, previousArticleId
     if (!isValidContent(content)) {
         throw new Error("Invalid article content.");
     }
+    return true;
+}
 
-    if (!isValidArticle(previousArticleId)) {
-        throw new Error("Invalid article Id.");
-    }
-    
-    articleId = data.articles.length; //need to change, if article is deleted repeated id will appear
+/**
+ * Add new article from user to database
+ *
+ * @param {Session} session - User's session used to add new article
+ * @param {string} title - The new article's name
+ * @param {string} summary - The new article's summary
+ * @param {string} content - The new article's text content
+ * @param {boolean} long
+ * @param {number} price
+ * @param {string[]} tags
+ * @param {int} previousArticleId - Previous chapter's article's id
+ * @returns return empty object if upload success
+ */
+export function articleUpload({session, title, summary, content, long, price, tags, previousArticleId}) {
+    validate(session, title, summary, content);
 
-    const previousArticle = data.articles.find(article => article.id === previousArticleId);
-    previousArticle.nextChap = articleId;
+    const articleId = newId(1);
     const date = new Date();
-    data.articles.push({
-        id: articleId,
-        content: content,
-        summary: summary,
-        author: getAuthorName(session),
-        initialCreateTime: `${date.getFullYear()}-${(date.getMonth() + 1).toLocaleString('en-US', { minimumIntegerDigits: 2 })}-${date.getDate().toLocaleString('en-US', { minimumIntegerDigits: 2 })}`,
-        lastEditTime: `${date.getFullYear()}-${(date.getMonth() + 1).toLocaleString('en-US', { minimumIntegerDigits: 2 })}-${date.getDate().toLocaleString('en-US', { minimumIntegerDigits: 2 })}`,
-        nextChap: -1,
-        comments: []
-    });
 
-    setData(data);
+    if (isValidArticle(previousArticleId)) {
+        let previous = getData(Target.article, By.id, previousArticleId);
+        previous.nextChap= articleId;
+        updateData(previous);
+    }
+
+    function getAuthorName(session) {
+        return session;  // to be replaced
+    }
+
+    addData(new Articles(
+        articleId,
+        title,
+        summary,
+        content,
+        getAuthorName(session),
+        date,
+        date,
+        -1,
+        0,
+        long,
+        price,
+        tags,
+        [] // comments set to an empty array
+    ));
     return {};
 }
 
 /**
- * Add new article from user to data base
+ * Add new article from user to database
  *
  * @param {Session} session - User's session used to add new article
- * @param {string} name - The new article's name
+ * @param {string} title - The new article's name
  * @param {string} summary - The new article's summary
  * @param {string} content - The new article's text content
- * @returns {} return empty object if update success
+ * @param {number} rating
+ * @param {boolean} long
+ * @param {number} price
+ * @param {string[]} tags
+ * @param {number} targetArticleId
+ * @param {number} nextArticle - the id of the next article
  */
-export function articleUpdate(session, name, summary, content, targetArticle, nextArticle) {
-    const data = getData();
-    const id = data.articles.length;
-    
-    if (!isValidSession(session)) {
-        throw new Error('Invalid user session.');
-    }
+export function articleUpdate(session, title, summary, content, rating, long, price, tags, targetArticleId, nextArticle) {
+    validate(session, title, summary, content);
 
-    if (!isValidArticleName(name)) {
-        throw new Error('Invalid article name.');
-    }
-
-    if (!isValidSummary(summary)) {
-        throw new Error("Invalid article summary.");
-    }
-
-    if (!isValidContent(content)) {
-        throw new Error("Invalid article content.");
-    }
-
-    if (!isValidArticle(nextArticle) || !isValidArticle(targetArticle)) {
+    if (!isValidArticle(nextArticle) || !isValidArticle(targetArticleId)) {
         throw new Error("Invalid article Id.");
     }
 
-    const article = data.articles.find(article => article.id === targetArticle);
-    
-    article.content = content;
-    article.summary = summary;
-    article.author = getAuthorName(session);
-    article.lastEditTime = `${date.getFullYear()}-${(date.getMonth() + 1).toLocaleString('en-US', { minimumIntegerDigits: 2 })}-${date.getDate().toLocaleString('en-US', { minimumIntegerDigits: 2 })}`;
-    article.nextChap = nextArticle;
+    const articleIndex = getIndex(Target.article, targetArticleId);
+    const article = getData(Target.article, By.index, articleIndex);
 
-    setData(data);
+    updateData(new Articles(
+        targetArticleId,
+        title,
+        summary,
+        content,
+        article.author,
+        article.initialCreateTime,
+        new Date(),
+        nextArticle,
+        rating,
+        long,
+        price,
+        tags,
+        article.comments
+    ));
+
+    addPublishedArticles(article.author, targetArticleId);
     return {};
 }
 
 export function getArticleDetails(articleId) {
-    const data = getData();
-    const article = data.articles.find(element => element.id === articleId);
-    if (!article) {
-        throw new Error('Article not found');
-    }
-    return article;
+    return getData(Target.article, By.id, articleId);
 }
 
 export function addComment(articleId, userId, commentContent) {
-    const data = getData();
-    const articleIndex = data.articles.findIndex(element => element.id === articleId);
-    if (articleIndex === -1) {
-        throw new Error('Article not found');
-    }
-
-    const newComment = {
-        content: commentContent,
-        author: userId,
-        time: new Date().toISOString(),
-        reply: []
-    };
-
-    data.articles[articleIndex].comments.push(newComment);
-    setData(data);
-    return newComment;
+    return addComments(userId, articleId, commentContent);
 }
