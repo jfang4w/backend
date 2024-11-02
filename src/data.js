@@ -352,7 +352,7 @@ export function addData(newValue) {
 
 export function newId(target) {
     let data = target;
-    if (! target instanceof Comments) {
+    if (typeof target === 'number') {
         data = getVariable(target);
     }
 
@@ -366,7 +366,7 @@ export function newId(target) {
         }
     }
 
-    return insert? index: articles.length;
+    return insert? index: data.length;
 }
 
 export function addPublishedArticles(userId, articleId) {
