@@ -18,6 +18,13 @@ import {
     userDelete
 } from "./user.js";
 
+import {
+    articleUpdate,
+    articleUpload,
+    addComment,
+    getArticleDetails
+} from "./article.js";
+
 export const app = express();
 
 // Use middleware that allows us to access the JSON body of requests
