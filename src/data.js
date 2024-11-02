@@ -87,6 +87,8 @@ export class Comments {
     }
 }
 
+// this Replies class can be removed as the parents are included as the Comment id.
+
 export class Replies extends Comments {
     /**
      * Creates a new reply.
@@ -98,7 +100,7 @@ export class Replies extends Comments {
      * @param {number} hate - The number of dislikes for the reply.
      * @param {Date} time - The time the reply was made.
      * @param {Replies[]} replay - An array of replies to this reply.
-     * @param {(Comments|Replies)[]} parents - An array of parent replies or comments.
+     * @param {number[]} parents - An array of ids of parent replies or comments.
      */
     constructor(id, content, author, liked, hate, time, replay, parents) {
         super(id, content, author, liked, hate, time, replay);
@@ -388,16 +390,33 @@ function  newCommentId(parentIds) {
 }
 
 export function addComments(userId, parentIds, content) {
+    const commentId = newCommentId(parentIds);
+    /*
+    commentId[0] is the sub-id for this comment,
+    commentId[1] is the INDEX of the article,
+    commentId[2]-commentId[len-1] are the INDEXES of the parent comments.
+     */
     const comment = new Comments(
-        parentIds.concat(newCommentId(parentIds)),
+        parentIds.concat(commentId[0]),
         content,
         userId,
         0,
         0,
         new Date(),
         []
-    );
-    articles[getIndex(Target.article, parentIds[0])].comments.push(comment);
+    );  // create the comment object
+
+    let parent = articles[commentId[1]];  // set the parent comment to the article itself.
+    if (parentIds.length === 1) {  // if the article is the only parent
+        parent.comments.push(comment);  // push this comment to the article's comment list
+        return comment.json();
+    }
+
+    parent = parent.comments;  // if this comment is a reply
+    for (let i=2; i<commentId.length; i++) {
+        parent = parent[commentId[i]].reply;  // find the parent of this reply
+    }
+    parent.push(comment);  // add this reply to the parent
     return comment.json();
 }
 
