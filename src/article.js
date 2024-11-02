@@ -51,7 +51,7 @@ function validate(session, name, summary, content) {
  * @param {int} previousArticleId - Previous chapter's article's id
  * @returns return empty object if upload success
  */
-export function articleUpload({session, title, summary, content, long, price, tags, previousArticleId}) {
+export function articleUpload(session, title, summary, content, long, price, tags, previousArticleId) {
     validate(session, title, summary, content);
 
     const articleId = newId(Target.article);
@@ -132,14 +132,13 @@ export function getArticleDetails(articleId) {
     return getData(Target.article, By.id, articleId);
 }
 
-
 /**
- * 
- * @param {number[]} parentIds the parent ids (i.e. [<article id>, <parent comments/replies ids>])
+ *
+ * @param {number[]} articleId the parent ids
  * @param {number} userId
  * @param {string} commentContent
  * @returns {{author: *, hate: *, time: *, reply: [*], content: *, liked: *}}
  */
-export function addComment(parentIds, userId, commentContent) {
-    return addComments(userId, parentIds, commentContent);
+export function addComment(articleId, userId, commentContent) {
+    return addComments(userId, articleId, commentContent);
 }
