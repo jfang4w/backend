@@ -1,7 +1,11 @@
 import {
-    getData, 
+    getData,
     setData
 } from "../data.js";
+
+/*
+ * Consider putting this file in ../data.js to avoid getting and setting the entire dataset everytime a function is called.
+ */
 
 export function checkUsername(username) {
     return !getData().users.some(element => element.username === username);
