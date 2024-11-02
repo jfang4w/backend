@@ -17,10 +17,14 @@ export function createRoom(uid) {
 
 export function sendMessage(roomId, author, message) {
     let room = getData(Target.room, By.id, roomId);
-    room.message.push(new Messages(
-        author,
-        message,
-        new Date()));
 
-    updateData(room);
+    if (author in room.uid) {
+        room.message.push(new Messages(
+            author,
+            message,
+            new Date()));
+        updateData(room);
+        return;
+    }
+    throw new Error(`uid ${author} should not be in this room`);
 }
