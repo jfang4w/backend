@@ -1,8 +1,10 @@
 import validator from "validator";
 
 import {
-    getData
+    getIndex
 } from "../data.js";
+
+import {Target} from "../const.js";
 
 /** Check if the given email is valid
  *
@@ -38,7 +40,7 @@ export function isValidName(name) {
 }
 
 export function isValidSession(veri_session) {
-    data = getData();
+    // data = getData();
     //data.sessions.find(session => session.sessionId = veri_session.sessionId);
     return true;
 } 
@@ -56,9 +58,10 @@ export function isValidContent(content) {
 }
 
 export function isValidArticle(articleId) {
-    data = getData();
-    if (data.articles.find(article => article.Id === articleId) != null) {
-        return true;
-    }
-    return false;
+    // data = getData();
+    // if (data.articles.find(article => article.Id === articleId) != null) {
+    //     return true;
+    // }
+    // return false;
+    return getIndex(Target.article, articleId) !== -1;
 }
