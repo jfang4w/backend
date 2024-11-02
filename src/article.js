@@ -83,6 +83,8 @@ export function articleUpload({session, title, summary, content, long, price, ta
         tags,
         [] // comments set to an empty array
     ));
+
+    addPublishedArticles(getAuthorName(session), articleId);
     return {};
 }
 
@@ -125,8 +127,6 @@ export function articleUpdate(session, title, summary, content, rating, long, pr
         tags,
         article.comments
     ));
-
-    addPublishedArticles(article.author, targetArticleId);
     return {};
 }
 
