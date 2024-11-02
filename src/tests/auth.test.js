@@ -3,7 +3,8 @@ import { app } from "../server.js";
 
 import {
     clear,
-    ERROR
+    ERROR,
+    NUM
 } from "./testUtils.js";
 
 describe("POST /v1/signup", () => {
@@ -13,7 +14,7 @@ describe("POST /v1/signup", () => {
         [ "invalid password (no letters)", "abc@abc.com", "12343432", "abc", 400, ERROR ],
         [ "invalid password (too short)", "abc@abc.com", "abc12", "abc", 400, ERROR ],
         [ "invalid username (too short)", "abc@abc.com", "abc1234", "a", 400, ERROR ],
-        [ "all valid inputs", "abc@abc.com", "abc1234", "abc", 200, {} ],
+        [ "all valid inputs", "abc@abc.com", "abc1234", "abc", 200, NUM ],
         [ "repeated Email", "abc@abc.com", "abc1234", "abcdef", 400, ERROR ],
         [ "repeated username", "abcdef@abc.com", "abc1234", "abc", 400, ERROR ]
     ];
@@ -36,17 +37,17 @@ describe("POST /v1/signin", () => {
     beforeAll(async () => {
         clear();
         await request(app)
-        .post("/v1/signup")
-        .send({
-            email: "abc@abc.com",
-            password: "abc1234",
-            username: "abc"
-        });
+            .post("/v1/signup")
+            .send({
+                email: "abc@abc.com",
+                password: "abc1234",
+                username: "abc"
+            });
     });
     const tests = [
         [ "wrong Email", "abcdef@abc.com", "abc1234", 400, ERROR ],
         [ "wrong password", "abc@abc.com", "abcd1234", 400, ERROR ],
-        [ "all valid inputs", "abc@abc.com", "abc1234", 200, { sessionId: expect.any(Number) } ]
+        [ "all valid inputs", "abc@abc.com", "abc1234", 200, { sessionId: NUM } ]
     ];
     it.each(tests) (
         "Testing signin with %p, the inputs are: %p, %p, expected output is { %p, %p }.",
@@ -66,19 +67,19 @@ describe("POST /v1/signout", () => {
     beforeAll(async() => {
         clear();
         await request(app)
-        .post("/v1/signup")
-        .send({
-            email: "abc@abc.com",
-            password: "abc1234",
-            username: "abc"
-        });
+            .post("/v1/signup")
+            .send({
+                email: "abc@abc.com",
+                password: "abc1234",
+                username: "abc"
+            });
 
         await request(app)
-        .post("/v1/signin")
-        .send({
-            email: "abc@abc.com",
-            password: "abc1234"
-        });
+            .post("/v1/signin")
+            .send({
+                email: "abc@abc.com",
+                password: "abc1234"
+            });
     });
 
     const tests = [
