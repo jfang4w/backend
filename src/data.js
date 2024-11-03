@@ -67,17 +67,25 @@ export class Users {
         });
     }
 
-    delete(isByAdmin) {
-        this.status = isByAdmin? Status.deletedByAdmin : Status.deletedByUser;
-        this.username = undefined;
-        this.nameFirst = undefined;
-        this.nameLast = undefined;
-        this.email = undefined;
-        this.password = undefined;
-        this.passwordAttempt = undefined;
-        this.accountCreateDate = undefined;
-        this.publishedArticles = undefined;
-        this.activeSessions = undefined;
+    clone() {
+        return new Users(
+            this.id,
+            this.status,
+            this.following,
+            this.followers,
+            this.likesGot,
+            this.likes,
+            this.dislikes,
+            this.username,
+            this.nameFirst,
+            this.nameLast,
+            this.email,
+            this.password,
+            this.passwordAttempt,
+            this.accountCreateDate,
+            this.publishedArticles,
+            this.activeSessions
+        );
     }
 }
 
@@ -120,6 +128,20 @@ export class Comments {
             isAuthor: this.isAuthor,
             isCommenter: this.isCommenter
         });
+    }
+
+    clone() {
+        return new Comments(
+            this.id,
+            this.content,
+            this.author,
+            this.liked,
+            this.hate,
+            this.time,
+            this.reply.map(reply => reply.clone()),
+            this.isAuthor,
+            this.isCommenter
+        );
     }
 }
 
@@ -204,6 +226,27 @@ export class Articles {
             comments: this.comments.map(comment => comment.json())
         });
     }
+
+    clone() {
+        return new Articles(
+            this.id,
+            this.status,
+            this.title,
+            this.summary,
+            this.content,
+            this.author,
+            this.initialCreateTime,
+            this.lastEditTime,
+            this.nextChap,
+            this.rating,
+            this.likes,
+            this.dislikes,
+            this.long,
+            this.price,
+            this.tags,
+            this.comments.map(comment => comment.clone())
+        );
+    }
 }
 
 // Previously dm
@@ -232,6 +275,15 @@ export class Messages {
             time: this.time
         });
     }
+
+    clone() {
+        return new Messages(
+            this.author,
+            this.quote,
+            this.message,
+            this.time
+        );
+    }
 }
 
 export class ChatRoom {
@@ -256,6 +308,14 @@ export class ChatRoom {
             status: this.status,
             message: [this.message.map(message => message.json())]
         });
+    }
+
+    clone() {
+        return new ChatRoom(
+            this.id,
+            this.uid,
+            this.status,
+            this.message.map(message => message.clone()));
     }
 }
 
