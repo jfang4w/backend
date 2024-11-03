@@ -1,7 +1,7 @@
 import validator from "validator";
 
 import {
-    getIndex
+    newId
 } from "../data.js";
 
 import {Target} from "../const.js";
@@ -63,5 +63,9 @@ export function isValidArticle(articleId) {
     //     return true;
     // }
     // return false;
-    return getIndex(Target.article, articleId) !== -1;
+    return 0 <= articleId && articleId < newId(Target.article);
+}
+
+export function isValidUserId(userId) {
+    return 0 <= userId && userId < newId(Target.user);
 }
