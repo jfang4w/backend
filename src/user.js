@@ -4,8 +4,7 @@ import {
     newId,
     Users,
     runFunction,
-    addData,
-    getIndex
+    addData
 } from "./data.js";
 
 import {
@@ -21,11 +20,11 @@ import {
 import {
     isValidEmail,
     isValidName,
-    isValidPassword,
+    isValidPassword, isValidUserId,
     isValidUsername
 } from "./utils/validations.js";
 
-import {By, Target} from "./const.js";
+import {Status, Target} from "./const.js";
 
 /**
  * Register a user with an email, password, and names,
@@ -34,7 +33,7 @@ import {By, Target} from "./const.js";
  * @param {string} email - The new user's Email
  * @param {string} password - The new user's password
  * @param {string} username - The new user's username
- * @returns {number} Return an unique ID for the new user
+ * @returns {number} Return a unique ID for the new user
  * if the registration is successful
  */
 export function userSignup(email, password, username) {
@@ -62,6 +61,12 @@ export function userSignup(email, password, username) {
 
     addData(new Users(
         id,
+        Status.public,
+        [],
+        [],
+        0,
+        [],
+        [],
         username,
         'firstname', // missing firstname
         'lastname', // missing lastname
@@ -80,10 +85,10 @@ export function userSignup(email, password, username) {
  * returns their authUserId value.
  *
  * @param {string} email - The registered user's Email
- * @param {string} password - The registered user's passowrd
+ * @param {string} password - The registered user's password
  * @returns - Return the registered user's ID
  */
-export function userSignin(email, password) {
+export function userSignIn(email, password) {
     // const data = getData();
 
     if (!email) {
@@ -101,8 +106,8 @@ export function userSignin(email, password) {
     if (user === undefined || user.password !== password) {
         throw new Error('The email and password combination does not exist.');
     }
-    const userIndex = getIndex(Target.user, user.id);
-    return { sessionId: appendSession(userIndex) };
+
+    return { sessionId: appendSession(user.id) };
 }
 
 /**
@@ -110,24 +115,24 @@ export function userSignin(email, password) {
  * then returns their authUserId value.
  *
  * @param {number} userId
- * @param {number} sessionId - The unique Id for the current session
- * @returns Return an unique ID for the new user
+ * @param {number} sessionId - The unique ID for the current session
+ * @returns Return a unique ID for the new user
  * if the registration is successful
  */
-export function userSignout(userId, sessionId) {
-    const userIndex = getIndex(Target.user, userId);
+export function userSignOut(userId, sessionId) {
+    // const userIndex = getIndex(Target.user, userId);
 
-    if (userIndex === -1) {
+    if (isValidUserId(userId)) {
         throw new Error("This user is not signed in.");
     }
 
-    const sessionIndex = getSessionIndex(userIndex, sessionId);
+    const sessionIndex = getSessionIndex(userId, sessionId);
 
     if (sessionIndex === -1) {
         throw new Error("This session has already been signed out.");
     }
 
-    removeSession(userIndex, sessionIndex);
+    removeSession(userId, sessionIndex);
     return {};
 }
 
@@ -155,13 +160,13 @@ export function userDetailUpdate(userId, username, nameFirst, nameLast) {
     }
 
     // const data = getData();
-    const userIndex = getIndex(Target.user, userId);
+    // const userIndex = getIndex(Target.user, userId);
 
-    if (userIndex === -1) {
+    if (userId >= newId(Target.user)) {
         throw new Error("The user doesn't exist.");
     }
 
-    const user = getData(By.index, userIndex);
+    const user = getData(Target.user, userId);
 
     user.username = username;
     user.namefirst = nameFirst;
@@ -197,13 +202,13 @@ export function userEmailUpdate(userId, newEmail) {
         }
     });
 
-    const userIndex = getIndex(Target.user, userId);
+    // const userIndex = getIndex(Target.user, userId);
 
-    if (userIndex === -1) {
+    if (isValidUserId(userId)) {
         throw new Error("The user doesn't exist.");
     }
 
-    let user = getData(Target.user, By.index, userIndex);
+    let user = getData(Target.user, userId);
     user.email = newEmail;
     updateData(user);
 
@@ -218,10 +223,10 @@ export function userPasswordUpdate(userId, oldPassword, newPassword) {
     }
 
     // const data = getData();
-    const userIndex = getIndex(Target.user, userId);
-    let user = getData(Target.user, By.index, userIndex);
+    // const userIndex = getIndex(Target.user, userId);
+    let user = getData(Target.user, userId);
 
-    if (userIndex === -1) {
+    if (isValidUserId(userId)) {
         throw new Error("The user doesn't exist.");
     }
 
@@ -241,10 +246,10 @@ export function userPasswordUpdate(userId, oldPassword, newPassword) {
 
 export function userDelete(userId, password) {
     // const data = getData();
-    const userIndex = getIndex(Target.user, userId);
-    const user = getData(Target.user, By.index, userIndex);
+    // const userIndex = getIndex(Target.user, userId);
+    let user = getData(Target.user, userId);
 
-    if (userIndex === -1) {
+    if (isValidUserId(userId)) {
         throw new Error("The user doesn't exist.");
     }
 
@@ -252,9 +257,13 @@ export function userDelete(userId, password) {
         throw new Error("The password doesn't match the existing password.");
     }
 
-    runFunction(0, function (data) {
-        data.splice(userIndex, 1);
-    });
+    user.status = Status.deletedByUser; // change in future to allow more deletion reasons.
+
+    updateData(user);
+
+    // runFunction(0, function (data) {
+    //     data.splice(userId, 1);
+    // });
     // data.users.splice(userIndex, 1);
     // setData(data);
     return {};
