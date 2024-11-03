@@ -141,14 +141,15 @@ export function userDetail(id) {
     if (user == null) {
         throw new Error("The user doesn't exist.");
     }
-    return {
-        user: {
-            username: user.username,
-            nameFirst: user.nameFirst,
-            nameLast: user.nameLast,
-            accountCreateDate: user.accountCreateDate
-        }
-    };
+    // return {
+    //     user: {
+    //         username: user.username,
+    //         nameFirst: user.nameFirst,
+    //         nameLast: user.nameLast,
+    //         accountCreateDate: user.accountCreateDate
+    //     }
+    // };
+    return JSON.parse(user.json());
 }
 
 export function userDetailUpdate(userId, username, nameFirst, nameLast) {
@@ -204,7 +205,7 @@ export function userEmailUpdate(userId, newEmail) {
 
     // const userIndex = getIndex(Target.user, userId);
 
-    if (isValidUserId(userId)) {
+    if (!isValidUserId(userId)) {
         throw new Error("The user doesn't exist.");
     }
 
@@ -226,7 +227,7 @@ export function userPasswordUpdate(userId, oldPassword, newPassword) {
     // const userIndex = getIndex(Target.user, userId);
     let user = getData(Target.user, userId);
 
-    if (isValidUserId(userId)) {
+    if (!isValidUserId(userId)) {
         throw new Error("The user doesn't exist.");
     }
 
@@ -249,7 +250,7 @@ export function userDelete(userId, password) {
     // const userIndex = getIndex(Target.user, userId);
     let user = getData(Target.user, userId);
 
-    if (isValidUserId(userId)) {
+    if (!isValidUserId(userId)) {
         throw new Error("The user doesn't exist.");
     }
 
