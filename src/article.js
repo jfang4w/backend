@@ -16,7 +16,7 @@ import {
     isValidSummary
 } from "./utils/validations.js";
 
-import {By, Target} from "./const.js";
+import {Status, Target} from "./const.js";
 
 
 function validate(session, name, summary, content) {
@@ -58,8 +58,8 @@ export function articleUpload(session, title, summary, content, long, price, tag
     const date = new Date();
 
     if (isValidArticle(previousArticleId)) {
-        let previous = getData(Target.article, By.id, previousArticleId);
-        previous.nextChap= articleId;
+        let previous = getData(Target.article, previousArticleId);
+        previous.nextChap = articleId;
         updateData(previous);
     }
 
@@ -69,6 +69,7 @@ export function articleUpload(session, title, summary, content, long, price, tag
 
     addData(new Articles(
         articleId,
+        Status.public,  // change in future to allow the author to set the visibility when uploading the article
         title,
         summary,
         content,
@@ -77,6 +78,8 @@ export function articleUpload(session, title, summary, content, long, price, tag
         date,
         -1,
         0,
+        [],
+        [],
         long,
         price,
         tags,
@@ -108,10 +111,11 @@ export function articleUpdate(session, title, summary, content, rating, long, pr
         throw new Error("Invalid article Id.");
     }
 
-    const article = getData(Target.article, By.id, targetArticleId);
+    const article = getData(Target.article, targetArticleId);
 
     updateData(new Articles(
         targetArticleId,
+        article.status,  // change in future to enable status change (e.g. from public to private or delete it)
         title,
         summary,
         content,
@@ -120,6 +124,8 @@ export function articleUpdate(session, title, summary, content, rating, long, pr
         new Date(),
         nextArticle,
         rating,
+        [],
+        [],
         long,
         price,
         tags,
@@ -129,7 +135,7 @@ export function articleUpdate(session, title, summary, content, rating, long, pr
 }
 
 export function getArticleDetails(articleId) {
-    return getData(Target.article, By.id, articleId);
+    return getData(Target.article, articleId);
 }
 
 /**
