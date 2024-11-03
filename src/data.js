@@ -1,4 +1,4 @@
-import { By, Target } from './const.js';
+import {Status, Target} from './const.js';
 
 // Previously users
 
@@ -7,6 +7,12 @@ export class Users {
      * Represents a user account.
      *
      * @param {number} id - The unique ID of the user.
+     * @param {number} status - The status code of the user.
+     * @param {number[]} following - The id of the user's following accounts
+     * @param {number[]} followers - The id of the user's followers' accounts
+     * @param {number} likesGot - The total number of likes got by the user
+     * @param {number[]} likes - The id of articles user liked.
+     * @param {number[]} dislikes - The id of articles user disliked.
      * @param {string} username - The user's username
      * @param {string} nameFirst - The user's first name.
      * @param {string} nameLast - The user's last name.
@@ -17,8 +23,14 @@ export class Users {
      * @param {number[]} publishedArticles - An array of published article IDs.
      * @param {number[]} activeSessions - An array of active session IDs.
      */
-    constructor(id, username, nameFirst, nameLast, email, password, passwordAttempt, accountCreateDate, publishedArticles, activeSessions) {
+    constructor(id, status, following, followers, likesGot, likes, dislikes, username, nameFirst, nameLast, email, password, passwordAttempt, accountCreateDate, publishedArticles, activeSessions) {
         this.id = id;
+        this.status = status;
+        this.following = following;
+        this.followers = followers;
+        this.likesGot = likesGot;
+        this.likes = likes;
+        this.dislikes = dislikes;
         this.username = username;
         this.nameFirst = nameFirst;
         this.nameLast = nameLast;
@@ -35,8 +47,14 @@ export class Users {
     }
 
     json() {
-        return {
+        return JSON.stringify({
             id: this.id,
+            status: this.status,
+            following: this.following,
+            followers: this.followers,
+            likesGot: this.likesGot,
+            likes: this.likes,
+            dislikes: this.dislikes,
             username: this.username,
             nameFirst: this.nameFirst,
             nameLast: this.nameLast,
@@ -46,7 +64,20 @@ export class Users {
             accountCreateDate: this.accountCreateDate,
             publishedArticles: this.publishedArticles,
             activeSessions: this.activeSessions
-        };
+        });
+    }
+
+    delete(isByAdmin) {
+        this.status = isByAdmin? Status.deletedByAdmin : Status.deletedByUser;
+        this.username = undefined;
+        this.nameFirst = undefined;
+        this.nameLast = undefined;
+        this.email = undefined;
+        this.password = undefined;
+        this.passwordAttempt = undefined;
+        this.accountCreateDate = undefined;
+        this.publishedArticles = undefined;
+        this.activeSessions = undefined;
     }
 }
 
@@ -59,32 +90,36 @@ export class Comments {
      * @param {number[]} id - [<article id>, <comment id>]
      * @param {string} content - The content of the reply.
      * @param {number} author - The ID of the author.
-     * @param {number} liked - The number of likes for the reply.
-     * @param {number} hate - The number of dislikes for the reply.
+     * @param {number[]} likes - The id of users who like the reply.
+     * @param {number[]} dislikes - The id of users who hate the reply.
      * @param {Date} time - The time the reply was made.
-     * @param {Replies[]} reply - The reply.
+     * @param {Comments[]} reply - The reply.
      */
 
-    constructor(id, content, author, liked, hate, time, reply) {
+    constructor(id, content, author, likes, dislikes, time, reply) {
         this.id = id;
         this.content = content;
         this.author = author;
-        this.liked = liked;
-        this.hate = hate;
+        this.liked = likes;
+        this.hate = dislikes;
         this.time = time;
         this.reply = reply;
+        this.isAuthor = users[author].id === articles[id[0]].author;     // if the author of this comment/reply is also the author of the article
+        this.isCommenter = id.length < 3 ? true : users[author].id === articles[id[0]].comments[id[1]].author;  // if the author of this reply is also the author of the comment.
     }
 
     json() {
-        return {
+        return JSON.stringify({
             id: this.id,
             content: this.content,
             author: this.author,
             liked: this.liked,
             hate: this.hate,
             time: this.time,
-            reply: [this.reply.map(reply => reply.json())]
-        };
+            reply: [this.reply.map(reply => reply.json())],
+            isAuthor: this.isAuthor,
+            isCommenter: this.isCommenter
+        });
     }
 }
 
@@ -97,14 +132,14 @@ export class Replies extends Comments {
      * @param {number[]} id - [<article id>, <parent comments/replies ids>, <this reply id>]
      * @param {string} content - The content of the reply.
      * @param {number} author - The ID of the author.
-     * @param {number} liked - The number of likes for the reply.
-     * @param {number} hate - The number of dislikes for the reply.
+     * @param {number[]} likes - The id of users who like the reply.
+     * @param {number[]} dislikes - The id of user who hate the reply.
      * @param {Date} time - The time the reply was made.
      * @param {Replies[]} replay - An array of replies to this reply.
      * @param {number} parent - The id of parent reply/comment.
      */
-    constructor(id, content, author, liked, hate, time, replay, parent) {
-        super(id, content, author, liked, hate, time, replay);
+    constructor(id, content, author, likes, dislikes, time, replay, parent) {
+        super(id, content, author, likes, dislikes, time, replay);
         this.parent = parent;
     }
 }
@@ -114,6 +149,7 @@ export class Articles {
      * Creates a new chapter.
      *
      * @param {number} id - The chapter ID.
+     * @param {number} status - The status code.
      * @param {string} title - The title of the chapter.
      * @param {string} summary - A brief summary of the chapter.
      * @param {string} content - The content of the chapter (HTML formatted).
@@ -122,21 +158,26 @@ export class Articles {
      * @param {Date} lastEditTime - The time when the chapter was last edited.
      * @param {number} nextChap - The ID of the next chapter.
      * @param {number} rating - The rating of the chapter.
+     * @param {number[]} likes - The id of users who like this article.
+     * @param {number[]} dislikes - The id of users who dislike this article.
      * @param {boolean} long - Indicates if the chapter is long.
      * @param {number} price - The price of the chapter.
      * @param {string[]} tags - An array of tags associated with the chapter.
      * @param {Comments[]} comments - An array of comments on the chapter.
      */
-    constructor(id, title, summary, content, author, initialCreateTime, lastEditTime, nextChap, rating, long, price, tags, comments) {
+    constructor(id, status, title, summary, content, author, initialCreateTime, lastEditTime, nextChap, rating, likes, dislikes, long, price, tags, comments) {
         this.id = id;
+        this.status = status;
         this.title = title;
         this.summary = summary;
         this.content = content;
-        this.author = author;
+        this.author = author;  // change in future to make it a list of co-authors
         this.initialCreateTime = initialCreateTime;
         this.lastEditTime = lastEditTime;
         this.nextChap = nextChap;
         this.rating = rating;
+        this.likes = likes;
+        this.dislikes = dislikes;
         this.long = long;
         this.price = price;
         this.tags = tags;
@@ -144,8 +185,9 @@ export class Articles {
     }
 
     json() {
-        return {
+        return JSON.stringify({
             id: this.id,
+            status: this.status,
             title: this.title,
             summary: this.summary,
             content: this.content,
@@ -154,23 +196,13 @@ export class Articles {
             lastEditTime: this.lastEditTime,
             nextChap: this.nextChap,
             rating: this.rating,
+            likes: this.likes,
+            dislikes: this.dislikes,
             long: this.long,
             price: this.price,
             tags: this.tags,
             comments: this.comments.map(comment => comment.json())
-        };
-    }
-
-    update(title, summary, content, lastEditTime, nextChap, rating, long, price, tags) {
-        this.title = title;
-        this.summary = summary;
-        this.content = content;
-        this.lastEditTime = lastEditTime;
-        this.nextChap = nextChap;
-        this.rating = rating;
-        this.long = long;
-        this.price = price;
-        this.tags = tags;
+        });
     }
 }
 
@@ -181,21 +213,24 @@ export class Messages {
      * Sends a message.
      *
      * @param {number} author - The ID of the message sender.
+     * @param {Messages} quote - Quoting a previous message.
      * @param {string} message - The content of the message.
      * @param {Date} time - The time the message was sent.
      */
-    constructor(author, message, time) {
+    constructor(author, quote, message, time) {
         this.author = author;
+        this.quote = quote;
         this.message = message;
         this.time = time;
     }
 
     json() {
-        return {
+        return JSON.stringify({
             author: this.author,
+            quote: this.quote,
             message: this.message,
             time: this.time
-        };
+        });
     }
 }
 
@@ -204,20 +239,23 @@ export class ChatRoom {
      *
      * @param {number} id room id
      * @param {number[]} uid list of ids of all users in this room
+     * @param status
      * @param {Messages[]} message
      */
-    constructor(id, uid, message) {
+    constructor(id, uid, status, message) {
         this.id = id;
         this.uid = uid;
+        this.status = status;
         this.message = message;
     }
 
     json() {
-        return {
+        return JSON.stringify({
             id: this.id,
             uid: this.uid,
+            status: this.status,
             message: [this.message.map(message => message.json())]
-        };
+        });
     }
 }
 
@@ -226,6 +264,12 @@ export class ChatRoom {
 let users = [
     new Users(
         0,
+        Status.public,
+        [],
+        [],
+        0,
+        [],
+        [],
         'Ody Zhou',
         'Ody',
         'Zhou',
@@ -241,6 +285,7 @@ let users = [
 let articles = [
     new Articles(
         0,
+        Status.public,
         "some title",
         "some summaries",
         "some content",
@@ -249,48 +294,90 @@ let articles = [
         new Date(),
         1,
         5,
+        [0],
+        [],
         false,
         0,
         ["Blog"],
         [
+            /*
+            // The comments need to be added after the declaration of articles.
             new Comments(
                 [0, 0],
                 "some comments",
-                1,
-                10,
-                10,
+                0,
+                [0, 1],
+                [],
                 new Date(),
                 [
-                    new Replies(
+                    new Comments(
                         [0, 0, 0],
                         "some replies",
-                        2,
-                        5,
-                        5,
+                        0,
+                        [0],
+                        [1],
                         new Date(),
-                        [],
-                        [
-                            // the "some comments" above
-                        ]
+                        []
                     )
                 ]
             )
+             */
         ]
     ),
+];
+
+articles[0].comments = [
+    new Comments(
+        [0, 0],
+        "some comments",
+        0,
+        [0, 1],
+        [],
+        new Date(),
+        [
+            /*
+            // this reply has to be added after adding the parent comment
+            new Comments(
+                [0, 0, 0],
+                "some replies",
+                0,
+                [0],
+                [1],
+                new Date(),
+                []
+            )
+             */
+        ]
+    )
+];
+
+articles[0].comments[0].reply = [
+    new Comments(
+        [0, 0, 0],
+        "some replies",
+        0,
+        [0],
+        [1],
+        new Date(),
+        []
+    )
 ];
 
 let rooms = [
     new ChatRoom(
         0,
         [0, 1],
+        Status.active,
         [
             new Messages(
                 0,
+                null,
                 "Hello, 1",
                 new Date()
             ),
             new Messages(
                 1,
+                null,
                 "Hi, 0",
                 new Date()
             )
@@ -323,30 +410,29 @@ function getVariable(type) {
 /**
  *
  * @param {number} target what data is getting (users/articles/rooms)
- * @param {boolean} by (id (true)/index (false))
- * @param {number} value the value of id/index
+ * @param {number} id the value of id
  */
-export function getData(target, by, value) {
+export function getData(target, id) {
     const data = getVariable(target);
-    return by === By.index? data[value] : data.find(element => element.id === value);
+    return data[id];
 }
 
-/**
- *
- * @param {number} target what data is getting (users/articles/rooms)
- * @param {number} id the id of this variable
- */
-export function getIndex(target, id) {
-    const data = getVariable(target);
-    return data.findIndex(element => element.id === id);
-}
+// /**
+//  *
+//  * @param {number} target what data is getting (users/articles/rooms)
+//  * @param {number} id the id of this variable
+//  */
+// export function getIndex(target, id) {
+//     const data = getVariable(target);
+//     return data.findIndex(element => element.id === id);
+// }
 
 /**
  *
  * @param {Users|Articles|ChatRoom} newValue the new value
  */
 export function updateData(newValue) {
-    getVariable(newValue)[getIndex(Target.article, newValue.id)] = newValue;
+    getVariable(newValue)[newValue.id] = newValue;
 }
 
 export function addData(newValue) {
@@ -355,6 +441,10 @@ export function addData(newValue) {
 
 export function newId(target) {
     const data = getVariable(target);
+
+    return data.length;
+
+    /*
     let insert = false;
     let index = 0;
 
@@ -366,17 +456,16 @@ export function newId(target) {
     }
 
     return insert? index: data.length;
+     */
 }
 
 export function addPublishedArticles(userId, articleId) {
-    users[getIndex(Target.user, userId)].addPublishedArticles(articleId);
+    users[userId].addPublishedArticles(articleId);
 }
 
 function  newCommentId(parentIds) {
-    let comment = getData(Target.article, By.id, parentIds[0]).comments;
-    let indexes = [getIndex(Target.article, parentIds[0])];
+    let comment = getData(Target.article, parentIds[0]).comments;
     for (let i = 1; i < parentIds.length; i++) {
-        indexes.push(comment.findIndex(comment => comment.id[comment.id.length-1] === parentIds[i]));
         comment = comment.find(comment => comment.id[comment.id.length-1] === parentIds[i]).reply;
     }
 
@@ -390,35 +479,30 @@ function  newCommentId(parentIds) {
         }
     }
 
-    return [insert? index: comment.length].concat(indexes);
+    return insert? index: comment.length;
 }
 
 export function addComments(userId, parentIds, content) {
     const commentId = newCommentId(parentIds);
-    /*
-    commentId[0] is the sub-id for this comment,
-    commentId[1] is the INDEX of the article,
-    commentId[2]-commentId[len-1] are the INDEXES of the parent comments.
-     */
     const comment = new Comments(
-        parentIds.concat(commentId[0]),
+        parentIds.concat(commentId),
         content,
         userId,
-        0,
-        0,
+        [],
+        [],
         new Date(),
         []
     );  // create the comment object
 
-    let parent = articles[commentId[1]];  // set the parent comment to the article itself.
+    let parent = articles[parentIds[0]];  // set the parent comment to the article itself.
     if (parentIds.length === 1) {  // if the article is the only parent
         parent.comments.push(comment);  // push this comment to the article's comment list
         return comment.json();
     }
 
     parent = parent.comments;  // if this comment is a reply
-    for (let i=2; i<commentId.length; i++) {
-        parent = parent[commentId[i]].reply;  // find the parent of this reply
+    for (let i=1; i<parentIds.length; i++) {
+        parent = parent[parentIds[i]].reply;  // find the parent of this reply
     }
     parent.push(comment);  // add this reply to the parent
     return comment.json();
