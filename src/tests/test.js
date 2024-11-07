@@ -4,10 +4,10 @@ import {
     getArticleDetails,
     addComment
 } from "../article.js";
-import {initData, runFunction} from "../data.js";
+import {getData, initData} from "../data.js";
 import {Target} from "../const.js";
 import {userDelete, userDetail, userDetailUpdate, userEmailUpdate, userPasswordUpdate, userSignup} from "../user.js";
-import {createRoom, sendMessage} from "../dm.js";
+import {createRoom, sendMessage} from "../room.js";
 
 function testPreparation() {
     initData([],[],[]);
@@ -59,23 +59,23 @@ function articleTest() {
 function commentTest() {
     console.log('testing add comment');
     addComment([0], 0, "comment from author");
-    console.log(getArticleDetails(0).clone());
+    console.log(getArticleDetails(0));
 
     console.log('testing add another comment');
     addComment([0], 1, "comment from other");
-    console.log(getArticleDetails(0).clone());
+    console.log(getArticleDetails(0));
 
     console.log('testing add a reply to the first comment');
     addComment([0,0], 1, "other replying author's comment");
-    console.log(getArticleDetails(0).clone());
+    console.log(getArticleDetails(0));
 
     console.log('testing add a reply to the other comment');
     addComment([0,1], 0, "author replying to other's comment");
-    console.log(getArticleDetails(0).clone());
+    console.log(getArticleDetails(0));
 
     console.log('testing add a reply to the reply of the first comment');
     addComment([0,0,0], 0, "author replying 'other replying author's comment'");
-    console.log(getArticleDetails(0).clone());
+    console.log(getArticleDetails(0));
 }
 
 function userTest() {
@@ -110,9 +110,7 @@ function roomTest() {
     sendMessage(0, 1, 'hello, my id is 1');
 
     console.log('testing sending data');
-    runFunction(Target.room, function (data) {
-        console.log(data[0]);
-    });
+    console.log(getData(Target.room, 0));
 
     console.log('testing sending message from a person who is not in the room\nexpect an error\ngot:');
     userSignup(
@@ -129,7 +127,7 @@ function roomTest() {
     }
 }
 
-const testcasesToRun = [];  // put in test functions here
+const testcasesToRun = [articleTest, commentTest, userTest, roomTest];  // put in test functions here
 testcasesToRun.forEach((testcase) => {
     testPreparation();
     testcase();
