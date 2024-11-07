@@ -1,26 +1,32 @@
 import {
+    newId,
+    updateData,
     getData,
-    setData
-} from "data.js";
+    ChatRoom,
+    Messages
+} from "./data.js";
+import {Status, Target} from "./const.js";
 
-export function createDm(userId1, userId2, message) {
-    const data = getData();
-    data.dm.push({
-        id: data.dm.length + 1,
-        userId1: userId1,
-        userId2: userId2,
-        messages: [
-            { author: userId1, message: message, time: Math.floor(Date.now() / 1000) }
-        ]
-    });
-    setData(data);
+export function createRoom(uid) {
+    updateData(new ChatRoom(
+        newId(Target.room),
+        uid,
+        Status.active,
+        []
+    ));
 }
 
-export function sendDm(dmId, author, message) {
-    const data = getData();
-    data.dm[dmId].messages.push({
-        author: author,
-        message: message,
-        time: Math.floor(Date.now() / 1000)
-    });
+export function sendMessage(roomId, author, message) {
+    let room = getData(Target.room, roomId);
+
+    if (author in room.uid) {
+        room.message.push(new Messages(
+            author,
+            null, // change in future to allow quote
+            message,
+            new Date()));
+        updateData(room);
+        return;
+    }
+    throw new Error(`uid ${author} should not be in this room`);
 }

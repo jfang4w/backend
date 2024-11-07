@@ -1,39 +1,43 @@
 import {
+    updateData,
     getData,
-    setData
+    newId,
+    Users,
+    runFunction,
+    addData
 } from "./data.js";
 
 import {
     getUser,
-    getUserIndex,
+    // getUserIndex,
     getSessionIndex,
     removeSession,
     appendSession,
     checkUsername,
     checkEmail
-} from "./utils/userUtils.js"
+} from "./data.js";  // was ./utils/userUtils
 
 import {
     isValidEmail,
     isValidName,
-    isValidPassword,
+    isValidPassword, isValidUserId,
     isValidUsername
-} from "./utils/validations.js"
+} from "./utils/validations.js";
+
+import {Status, Target} from "./const.js";
 
 /**
  * Register a user with an email, password, and names,
  * then returns their authUserId value.
  *
  * @param {string} email - The new user's Email
- * @param {string} password - The new user's passowrd
- * @param {string} nameFirst - The new user's first name
- * @param {string} nameLast - The new user's last name
- * @returns {number} Return an unique ID for the new user
+ * @param {string} password - The new user's password
+ * @param {string} username - The new user's username
+ * @returns {number} Return a unique ID for the new user
  * if the registration is successful
  */
 export function userSignup(email, password, username) {
-    const data = getData();
-    const id = data.users.length;
+    const id = newId(Target.user);
     
     if (!isValidEmail(email)) {
         throw new Error('Invalid email format.');
@@ -54,21 +58,26 @@ export function userSignup(email, password, username) {
     if (!checkEmail(email)) {
         throw new Error('This email has already being used.');
     }
-    const date = new Date();
-    data.users.push({
-        id: id,
-        username: username,
-        email: email,
-        password: password,
-        nameFirst: "",
-        nameLast: "",
-        accountCreateDate: `${date.getFullYear()}-${(date.getMonth() + 1).toLocaleString('en-US', { minimumIntegerDigits: 2 })}-${date.getDate().toLocaleString('en-US', { minimumIntegerDigits: 2 })}`,
-        passwordAttempt: 0,
-        activeSessions: []
-    });
 
-    setData(data);
-    return {};
+    addData(new Users(
+        id,
+        Status.public,
+        [],
+        [],
+        0,
+        [],
+        [],
+        username,
+        'firstname', // missing firstname
+        'lastname', // missing lastname
+        email,
+        password,
+        0,
+        new Date(),
+        [],
+        []  // missing session id
+    ));
+    return id;
 }
 
 /**
@@ -76,11 +85,11 @@ export function userSignup(email, password, username) {
  * returns their authUserId value.
  *
  * @param {string} email - The registered user's Email
- * @param {string} password - The registered user's passowrd
- * @returns {number} - Return the registered user's ID
+ * @param {string} password - The registered user's password
+ * @returns - Return the registered user's ID
  */
-export function userSignin(email, password) {
-    const data = getData();
+export function userSignIn(email, password) {
+    // const data = getData();
 
     if (!email) {
         throw new Error('Empty email.');
@@ -89,37 +98,41 @@ export function userSignin(email, password) {
         throw new Error('Empty password.');
     }
 
-    const user = data.users.find(element => element.email === email);
+    // const user = data.users.find
+    const user = runFunction(Target.user, function (data) {
+        return data.find(element => element.email === email);
+    });
 
     if (user === undefined || user.password !== password) {
         throw new Error('The email and password combination does not exist.');
     }
-    const userIndex = getUserIndex(user.id);
-    return { sessionId: appendSession(userIndex) };
+
+    return { sessionId: appendSession(user.id) };
 }
 
 /**
  * Register a user with an email, password, and names,
  * then returns their authUserId value.
  *
- * @param {string} sessionId - The unique Id for the current session
- * @returns {} Return an unique ID for the new user
+ * @param {number} userId
+ * @param {number} sessionId - The unique ID for the current session
+ * @returns Return a unique ID for the new user
  * if the registration is successful
  */
-export function userSignout(userId, sessionId) {
-    const userIndex = getUserIndex(userId);
+export function userSignOut(userId, sessionId) {
+    // const userIndex = getIndex(Target.user, userId);
 
-    if (userIndex === -1) {
+    if (isValidUserId(userId)) {
         throw new Error("This user is not signed in.");
     }
 
-    const sessionIndex = getSessionIndex(userIndex, sessionId);
+    const sessionIndex = getSessionIndex(userId, sessionId);
 
     if (sessionIndex === -1) {
         throw new Error("This session has already been signed out.");
     }
 
-    removeSession(userIndex, sessionIndex);
+    removeSession(userId, sessionIndex);
     return {};
 }
 
@@ -128,14 +141,15 @@ export function userDetail(id) {
     if (user == null) {
         throw new Error("The user doesn't exist.");
     }
-    return {
-        user: {
-            username: user.username,
-            nameFirst: user.nameFirst,
-            nameLast: user.nameLast,
-            accountCreateDate: user.accountCreateDate
-        }
-    };
+    // return {
+    //     user: {
+    //         username: user.username,
+    //         nameFirst: user.nameFirst,
+    //         nameLast: user.nameLast,
+    //         accountCreateDate: user.accountCreateDate
+    //     }
+    // };
+    return JSON.parse(user.json());
 }
 
 export function userDetailUpdate(userId, username, nameFirst, nameLast) {
@@ -146,18 +160,26 @@ export function userDetailUpdate(userId, username, nameFirst, nameLast) {
         throw new Error('Invalid last name, you must enter at lease 3 characters');
     }
 
-    const data = getData();
-    const userIndex = getUserIndex(userId);
+    // const data = getData();
+    // const userIndex = getIndex(Target.user, userId);
 
-    if (userIndex === -1) {
+    if (userId >= newId(Target.user)) {
         throw new Error("The user doesn't exist.");
     }
 
-    data.users[userIndex].username = username;
-    data.users[userIndex].nameFirst = nameFirst;
-    data.users[userIndex].nameLast = nameLast;
+    const user = getData(Target.user, userId);
 
-    setData(data);
+    user.username = username;
+    user.namefirst = nameFirst;
+    user.nameLast = nameLast;
+
+    updateData(user);
+
+    // data.users[userIndex].username = username;
+    // data.users[userIndex].nameFirst = nameFirst;
+    // data.users[userIndex].nameLast = nameLast;
+    //
+    // setData(data);
     return {};
 }
 
@@ -166,21 +188,33 @@ export function userEmailUpdate(userId, newEmail) {
         throw new Error('Invalid email format.');
     }
 
-    const data = getData();
-    if (!(!data.users || data.users.length === 0)) {
-        if (data.users.some(element => element.email === newEmail)) {
-            throw new Error('This email has already being used.');
+    // const data = getData();
+    // if (!(!data.users || data.users.length === 0)) {
+    //     if (data.users.some(element => element.email === newEmail)) {
+    //         throw new Error('This email has already being used.');
+    //     }
+    // }
+
+    runFunction(0, function (data) {
+        if (!(!data || data.length === 0)) {
+            if (data.some(element => element.email === newEmail)) {
+                throw new Error('This email has already being used.');
+            }
         }
-    }
+    });
 
-    const userIndex = getUserIndex(userId);
+    // const userIndex = getIndex(Target.user, userId);
 
-    if (userIndex == -1) {
+    if (!isValidUserId(userId)) {
         throw new Error("The user doesn't exist.");
     }
 
-    data.users[userIndex].email = newEmail;
-    setData(data);
+    let user = getData(Target.user, userId);
+    user.email = newEmail;
+    updateData(user);
+
+    // data.users[userIndex].email = newEmail;
+    // setData(data);
     return {};
 }
 
@@ -189,38 +223,49 @@ export function userPasswordUpdate(userId, oldPassword, newPassword) {
         throw new Error('Password too weak, you must have at least 6 characters with at least 1 number or 1 letter.');
     }
 
-    const data = getData();
-    const userIndex = getUserIndex(userId);
+    // const data = getData();
+    // const userIndex = getIndex(Target.user, userId);
+    let user = getData(Target.user, userId);
 
-    if (userIndex == -1) {
+    if (!isValidUserId(userId)) {
         throw new Error("The user doesn't exist.");
     }
 
-    if (data.users[userIndex].password !== oldPassword) {
+    if (user.password !== oldPassword) {
         throw new Error("The password doesn't match the existing password.");
     }
 
-    if (data.users[userIndex].password === newPassword) {
+    if (user.password === newPassword) {
         throw new Error("New password cannot match the old password.");
     }
     
-    data.users[userIndex].password = newPassword;
-    setData(data);
+    user.password = newPassword;
+    updateData(user);
+    // setData(data);
     return {};
 }
 
 export function userDelete(userId, password) {
-    const data = getData();
-    const userIndex = getUserIndex(userId);
+    // const data = getData();
+    // const userIndex = getIndex(Target.user, userId);
+    let user = getData(Target.user, userId);
 
-    if (userIndex == -1) {
+    if (!isValidUserId(userId)) {
         throw new Error("The user doesn't exist.");
     }
 
-    if (data.users[userIndex].password !== password) {
+    if (user.password !== password) {
         throw new Error("The password doesn't match the existing password.");
     }
-    data.users.splice(userIndex, 1);
-    setData(data);
+
+    user.status = Status.deletedByUser; // change in future to allow more deletion reasons.
+
+    updateData(user);
+
+    // runFunction(0, function (data) {
+    //     data.splice(userId, 1);
+    // });
+    // data.users.splice(userIndex, 1);
+    // setData(data);
     return {};
 }
