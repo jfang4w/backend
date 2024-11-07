@@ -9,8 +9,8 @@ import {
 
 import {
     userSignup,
-    userSignin,
-    userSignout,
+    userSignIn,
+    userSignOut,
     userDetail,
     userDetailUpdate,
     userPasswordUpdate,
@@ -44,7 +44,7 @@ app.post('/v1/signup', (req, res) => {
 app.post('/v1/signin', (req, res) => {
     const { email, password } = req.body;
     try {
-        res.status(SUCCESS).json(userSignin(email, password));
+        res.status(SUCCESS).json(userSignIn(email, password));
     }
     catch (error) {
         res.status(BAD).json({ error: error.message });
@@ -55,7 +55,7 @@ app.post('/v1/signout', (req, res) => {
     const userId = parseInt((req.body.userId).toString());
     const sessionId = parseInt((req.body.sessionId).toString());
     try {
-        res.status(SUCCESS).json(userSignout(userId, sessionId));
+        res.status(SUCCESS).json(userSignOut(userId, sessionId));
     }
     catch (error) {
         res.status(BAD).json({ error: error.message });
@@ -136,7 +136,7 @@ app.post('/v1/article/:articleId/comment', (req, res) => {
     const { userId, content } = req.body;
 
     try {
-        const comment = addComment(articleId, userId, content);
+        const comment = addComment([articleId], userId, content);
         res.status(SUCCESS).json(comment);
     } catch (error) {
         res.status(BAD).json({ error: error.message });
