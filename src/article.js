@@ -4,11 +4,11 @@ import {
     addPublishedArticles,
     addComments,
     getData,
-    Articles,
+    newArticle,
     addData
 } from "./data.js";
 
-import { 
+import {
     isValidArticle,
     isValidArticleName,
     isValidContent,
@@ -38,6 +38,10 @@ function validate(session, name, summary, content) {
     return true;
 }
 
+function getAuthorName(session) {  // to be replaced in future
+    return session;
+}
+
 /**
  * Add new article from user to database
  *
@@ -45,17 +49,15 @@ function validate(session, name, summary, content) {
  * @param {string} title - The new article's name
  * @param {string} summary - The new article's summary
  * @param {string} content - The new article's text content
- * @param {boolean} long
+ * @param {boolean} long - If this article is long
  * @param {number} price
  * @param {string[]} tags
  * @param {int} previousArticleId - Previous chapter's article's id
  * @returns return empty object if upload success
  */
-export function articleUpload(session, title, summary, content, long, price, tags, previousArticleId) {
+export function articleUpload(session, title, summary, content, long, price,
+                              tags, previousArticleId) {
     validate(session, title, summary, content);
-
-    const articleId = newId(Target.article);
-    const date = new Date();
 
     if (isValidArticle(previousArticleId)) {
         let previous = getData(Target.article, previousArticleId);
@@ -63,11 +65,10 @@ export function articleUpload(session, title, summary, content, long, price, tag
         updateData(previous);
     }
 
-    function getAuthorName(session) {
-        return session;  // to be replaced
-    }
+    const articleId = newId(Target.article);
+    const date = new Date();
 
-    addData(new Articles(
+    addData(newArticle(
         articleId,
         Status.public,  // change in future to allow the author to set the visibility when uploading the article
         title,
@@ -113,7 +114,7 @@ export function articleUpdate(session, title, summary, content, rating, long, pr
 
     const article = getData(Target.article, targetArticleId);
 
-    updateData(new Articles(
+    updateData(newArticle(
         targetArticleId,
         article.status,  // change in future to enable status change (e.g. from public to private or delete it)
         title,
@@ -143,7 +144,7 @@ export function getArticleDetails(articleId) {
  * @param {number[]} articleId the parent ids
  * @param {number} userId
  * @param {string} commentContent
- * @returns {{author: *, hate: *, time: *, reply: [*], content: *, liked: *}}
+ * @returns {Object} the comment
  */
 export function addComment(articleId, userId, commentContent) {
     return addComments(userId, articleId, commentContent);
