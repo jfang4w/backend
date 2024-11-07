@@ -10,6 +10,6 @@ export function search(searchTerm) {
     let result = runFunction(Target.article, function (articles) {
         articles.filter((e) => e.content.includes(searchTerm));
     });
-    result = result.foreach((e) => { return { content: e.content, author: e.author, initialCreateTime: e.initialCreateTime }});
+    result = result.foreach((e) => { return { content: e.content, author: e.author, initialCreateTime: e.initialCreateTime };});
     return result;
 }
