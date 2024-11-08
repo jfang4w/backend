@@ -3,12 +3,21 @@
 All file name should be in `lowerCamelCase`.
 ```
 src
+├── article.js
+├── const.js
+├── data.js
+├── index.js
+├── room.js
 ├── server.js
 ├── user.js
-├── data.js
-└── utils
-    ├── articleUtils.js
-    └── userUtils.js
+├── utils
+│   ├── statusCode.js
+│   └── validation.js
+└── tests
+    ├── auth.test.js
+    ├── test.html
+    ├── test.js
+    └── testUtils.js
 ```
 
 ## Identifiers
