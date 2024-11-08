@@ -1,7 +1,6 @@
 import {
     updateData,
     newId,
-    addPublishedArticles,
     addComments,
     getData,
     newArticle,
@@ -56,7 +55,8 @@ function getAuthorName(session) {  // to be replaced in future
  * @returns return empty object if upload success
  */
 export function articleUpload(session, title, summary, content, long, price,
-                              tags, previousArticleId) {
+    tags, previousArticleId) {
+
     validate(session, title, summary, content);
 
     if (isValidArticle(previousArticleId)) {
@@ -84,10 +84,13 @@ export function articleUpload(session, title, summary, content, long, price,
         long,
         price,
         tags,
-        [] // comments set to an empty array
+        [], // comments set to an empty array
+        []
     ));
 
-    addPublishedArticles(getAuthorName(session), articleId);
+    const author = getData(Target.user, getAuthorName(session));
+    author.publishedArticles.push(articleId);
+    updateData(author);
     return {};
 }
 
@@ -130,7 +133,8 @@ export function articleUpdate(session, title, summary, content, rating, long, pr
         long,
         price,
         tags,
-        article.comments
+        article.comments,
+        article.annotations
     ));
     return {};
 }
@@ -147,5 +151,5 @@ export function getArticleDetails(articleId) {
  * @returns {Object} the comment
  */
 export function addComment(articleId, userId, commentContent) {
-    return addComments(userId, articleId, commentContent);
+    return addComments(articleId, userId, commentContent);
 }
