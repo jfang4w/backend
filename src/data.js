@@ -420,3 +420,14 @@ export function appendSession(userIndex) {
 export function removeSession(userIndex, sessionIndex) {
     users[userIndex].activeSessions.splice(sessionIndex, 1);
 }
+
+// The following function was in ./search.js
+
+export function search(searchTerm) {
+    return articles.filter((e) => e.content.includes(searchTerm) | e.title.includes(searchTerm)).map(e => ({
+        id: e.id,
+        author: e.author,
+        title: e.title,
+        content: e.content,
+        initialCreateTime: e.initialCreateTime}));
+}
