@@ -1,5 +1,13 @@
 import {Target} from './const.js';
 
+let users = [], articles = [], rooms = [], images = [];
+
+export function initData(USERS = [], ARTICLES = [], ROOMS = []) {
+    users = USERS;
+    articles = ARTICLES;
+    rooms = ROOMS;
+}
+
 /**
  * Creates a deep copy of the target.
  * @param {Object} target - The array (or object) to be copied deeply.
@@ -123,10 +131,11 @@ export function newComment(id, content, author, likes, dislikes, time, reply) {
  * @param {number} price - The price of the chapter.
  * @param {string[]} tags - An array of tags associated with the chapter.
  * @param {Object[]} comments - An array of comments on the chapter.
+ * @param {Object[]} annotations - An array of in-text annotations.
  */
 export function newArticle(id, status, title, summary, content, author, 
     initialCreateTime, lastEditTime, nextChap, rating, likes, dislikes,
-    long, price, tags, comments) {
+    long, price, tags, comments, annotations) {
     
     return {
         _type: 'article',
@@ -145,7 +154,8 @@ export function newArticle(id, status, title, summary, content, author,
         long: long,
         price: price,
         tags: tags,
-        comments: comments
+        comments: comments,
+        annotations: annotations
     };
 }
 
@@ -190,6 +200,8 @@ export function newRoom(id, uid, nicknames, roomName, status, message) {
     };
 }
 
+// New
+
 /**
  *
  * @param {number} id - the image id
@@ -212,7 +224,6 @@ export function newImage(id, author, url, alt, status) {
 /**
  *
  * @param {number} id - the annotation's id
- * @param {number} articleId - the article's id
  * @param {number} userId - the annotator's id
  * @param {number} start - the position of the start character of annotation
  * @param {number} end - the position of the last character of annotation
@@ -220,11 +231,10 @@ export function newImage(id, author, url, alt, status) {
  * @param {number[]} likes - the ids of users who likes this annotation
  * @param {number} status - the status of the annotation (e.g. public, private, deleted)
  */
-export function newAnnotation(id, articleId, userId, start, end, annotation, likes, status) {
+export function newAnnotation(id, userId, start, end, annotation, likes, status) {
     return {
         _type: 'annotation',
         id: id,
-        articleId: articleId,
         userId: userId,
         start: start,
         end: end,
@@ -234,8 +244,6 @@ export function newAnnotation(id, articleId, userId, start, end, annotation, lik
     };
 }
 
-let users = [], articles = [], rooms = [];
-
 /**
  *
  * @param {number|Object} type
@@ -244,26 +252,30 @@ let users = [], articles = [], rooms = [];
 function getVariable(type) {
     if (typeof type === 'object') {
         switch (type._type) {
-            case 'user':
-                return users;
-            case 'article':
-                return articles;
-            case 'room':
-                return rooms;
-            default:
-                throw new Error("Unknown type " + type._type);
+        case 'user':
+            return users;
+        case 'article':
+            return articles;
+        case 'room':
+            return rooms;
+        case 'image':
+            return images;
+        default:
+            throw new Error("Unknown type " + type._type);
         }
     }
 
     switch (type) {
-        case Target.user:
-            return users;
-        case Target.article:
-            return articles;
-        case Target.room:
-            return rooms;
-        default:
-            throw new Error(`Unknown type ${type}`);
+    case Target.user:
+        return users;
+    case Target.article:
+        return articles;
+    case Target.room:
+        return rooms;
+    case Target.image:
+        return images;
+    default:
+        throw new Error(`Unknown type ${type}`);
     }
 }
 
@@ -300,16 +312,12 @@ export function updateData(newValue) {
     getVariable(newValue)[newValue.id] = newValue;
 }
 
-export function addData(newValue) {
-    getVariable(newValue).push(newValue);
-}
-
 export function newId(target) {
     return getVariable(target).length;
 }
 
-export function addPublishedArticles(userId, articleId) {
-    users[userId].publishedArticles.push(articleId);
+export function addData(newValue) {
+    getVariable(newValue).push(newValue);
 }
 
 function  newCommentId(parentIds) {
@@ -321,7 +329,7 @@ function  newCommentId(parentIds) {
     return comment.length;
 }
 
-export function addComments(userId, parentIds, content) {
+export function addComments(parentIds, userId, content) {
     const commentId = newCommentId(parentIds);
     const comment = newComment(
         parentIds.concat(commentId),
@@ -347,10 +355,50 @@ export function addComments(userId, parentIds, content) {
     return comment;
 }
 
-export function initData(USERS = [], ARTICLES = [], ROOMS = []) {
-    users = USERS;
-    articles = ARTICLES;
-    rooms = ROOMS;
+/**
+ *
+ * @param {number} articleId
+ * @param {number} userId
+ * @param {number} start
+ * @param {number} end
+ * @param {string} content
+ * @param {number} status
+ */
+export function addAnnotations(articleId, userId, start, end, content, status) {
+    const article = getData(Target.article, articleId);
+    article.annotations.push(newAnnotation(
+        article.annotations.length,
+        userId,
+        start,
+        end,
+        content,
+        [],
+        status
+    ));
+    updateData(article);
+}
+
+/**
+ *
+ * @param {Image} image
+ * @returns {string}
+ */
+function storeImage(image) {
+    /*
+    Validation, virus scan, cropping over-sized images, storing, etc. to be performed here.
+     */
+    return `url of the stored${image}`;
+}
+
+export function addImages(authorId, image, alt, status) {
+    const url = storeImage(image);
+    images.push(newImage(
+        newId(Target.image),
+        authorId,
+        url,
+        alt,
+        status
+    ));
 }
 
 export function exist(type, value) {
