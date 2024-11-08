@@ -4,7 +4,7 @@ import {
     getArticleDetails,
     addComment
 } from "../article.js";
-import {addAnnotations, addImages, getData, getPartialData, initData} from "../data.js";
+import {addAnnotations, addImages, getData, getPartialData, initData, search} from "../data.js";
 import {Status, Target} from "../const.js";
 import {userDelete, userDetail, userDetailUpdate, userEmailUpdate, userPasswordUpdate, userSignup} from "../user.js";
 import {createRoom, sendMessage} from "../room.js";
@@ -144,7 +144,28 @@ function annotationsTest() {
     console.log(getArticleDetails(0));
 }
 
-const testcasesToRun = [articleTest, commentTest, userTest, roomTest, annotationsTest];  // put in test functions here
+function searchTest() {
+    articleUpload(
+        0,
+        '111111',
+        'summary',
+        '2222',
+        true,
+        10,
+        [],
+        -1
+    );
+    console.log('searching for 1, should return 2 articles');
+    console.log(search('1'));
+
+    console.log('searching for 2, should return 1 article');
+    console.log(search('2'));
+
+    console.log('searching for 111, should return 1 article');
+    console.log(search('111'));
+}
+
+const testcasesToRun = [];  // put in test functions here
 testcasesToRun.forEach((testcase) => {
     testPreparation();
     testcase();
