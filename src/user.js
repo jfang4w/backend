@@ -110,7 +110,7 @@ export function userSignIn(email, password) {
         throw new Error('The email and password combination does not exist.');
     }
 
-    return { sessionId: appendSession(user.id) };
+    return { sessionId: appendSession(user.id), id: user.id };
 }
 
 /**
@@ -165,7 +165,7 @@ export function userDetailUpdate(userId, username, nameFirst, nameLast) {
     const user = getData(Target.user, userId);
 
     user.username = username;
-    user.namefirst = nameFirst;
+    user.nameFirst = nameFirst;
     user.nameLast = nameLast;
 
     updateData(user);
