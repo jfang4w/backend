@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<script src="index.js"></script>
+<label for="email"></label><input id="email" type="email" placeholder="Email">
+<label for="password"></label><input id="password" type="password" placeholder="Password">
+<label for="username"></label><input id="username" type="text" placeholder="Username">
+<label id="status"></label>
+<button onclick="register(
+    document.getElementById('username').value,
+    document.getElementById('email').value,
+    document.getElementById('password').value,
+    document.getElementById('status'),
+    )">Submit</button>
+<button onclick="window.location.href='index.html'">Back</button>
+</body>
+</html>

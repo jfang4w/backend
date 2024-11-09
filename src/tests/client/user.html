@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+</head>
+<body>
+  <script src="index.js"></script>
+  <label id="status"></label>
+  <div></div>
+  <div>
+    <label for="id"></label><input id="id" type="text" placeholder="Your ID">
+    <button onclick="user(
+        document.getElementById('id').value,
+        document.getElementById('status')
+        )">Get Details</button>
+  </div>
+  <div>
+    <label for="session"></label><input id="session" type="text" placeholder="Your Session ID">
+    <button onclick="logout(
+        document.getElementById('id').value,
+        document.getElementById('session').value,
+        document.getElementById('status'))">Sign Out</button>
+  </div>
+  <div>
+    <label for="new username"></label><input id="new username" type="text" placeholder="New Username">
+    <label for="new firstname"></label><input id="new firstname" type="text" placeholder="New First Name">
+    <label for="new lastname"></label><input id="new lastname" type="text" placeholder="New Last Name">
+    <button onclick="update(
+        document.getElementById('new username').value,
+        document.getElementById('new firstname').value,
+        document.getElementById('new lastname').value,
+        document.getElementById('id').value,
+        document.getElementById('status'))">Update</button>
+  </div>
+  <div>
+    <label for="new email"></label><input id="new email" type="email" placeholder="New Email">
+    <button onclick="newEmail(
+        document.getElementById('new email').value,
+        document.getElementById('id').value,
+        document.getElementById('status'))">Update</button>
+  </div>
+  <div>
+    <label for="old password"></label><input id="old password" type="password" placeholder="Old Password">
+    <label for="new password"></label><input id="new password" type="password" placeholder="New Password">
+    <button onclick="newPassword(
+        document.getElementById('old password').value,
+        document.getElementById('new password').value,
+        document.getElementById('id').value,
+        document.getElementById('status'))">Update</button>
+  </div>
+<div>
+  <label for="password"></label><input id="password" type="password" placeholder="Password">
+  <button onclick="remove(
+          document.getElementById('password').value,
+          document.getElementById('id').value,
+          document.getElementById('status'))">Delete</button>
+</div>
+
+</body>
+</html>
