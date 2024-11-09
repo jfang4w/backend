@@ -25,10 +25,13 @@ import {
     getArticleDetails
 } from "./article.js";
 
+import cors from "cors";
+
 export const app = express();
 
 // Use middleware that allows us to access the JSON body of requests
 app.use(express.json());
+app.use(cors()); // use cors to allow cross-origin
 
 // API for all the features
 app.post('/v1/signup', (req, res) => {
@@ -73,8 +76,8 @@ app.get('/v1/user/:userId', (req, res) => {
 });
 
 app.put("/v1/user/update", (req, res) => {
-    const { username, nameFirst, nameLast } = req.body;
-    const { userId } = parseInt(userId);
+    let { username, nameFirst, nameLast, userId } = req.body;
+    userId = parseInt(userId);
 
     try {
         res.status(SUCCESS).json(userDetailUpdate(userId, username, nameFirst, nameLast));
@@ -85,8 +88,8 @@ app.put("/v1/user/update", (req, res) => {
 });
 
 app.put("/v1/user/email", (req, res) => {
-    const { newEmail } = req.body;
-    const { userId } = parseInt(userId);
+    let { newEmail, userId } = req.body;
+    userId = parseInt(userId);
 
     try {
         res.status(SUCCESS).json(userEmailUpdate(userId, newEmail));
@@ -97,8 +100,8 @@ app.put("/v1/user/email", (req, res) => {
 });
 
 app.put("/v1/user/password", (req, res) => {
-    const { oldPassword, newPassword } = req.body;
-    const { userId } = parseInt(userId);
+    let { oldPassword, newPassword, userId } = req.body;
+    userId = parseInt(userId);
 
     try {
         res.status(SUCCESS).json(userPasswordUpdate(userId, oldPassword, newPassword));
