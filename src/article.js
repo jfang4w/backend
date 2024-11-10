@@ -38,7 +38,7 @@ function validate(session, name, summary, content) {
 }
 
 function getAuthorName(session) {  // to be replaced in future
-    return session;
+    return parseInt(session);
 }
 
 /**
@@ -111,7 +111,7 @@ export function articleUpload(session, title, summary, content, long, price,
 export function articleUpdate(session, title, summary, content, rating, long, price, tags, targetArticleId, nextArticle) {
     validate(session, title, summary, content);
 
-    if (!isValidArticle(nextArticle) || !isValidArticle(targetArticleId)) {
+    if ((!isValidArticle(nextArticle) && nextArticle >= 0) || !isValidArticle(targetArticleId)) {
         throw new Error("Invalid article Id.");
     }
 
