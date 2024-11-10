@@ -139,8 +139,58 @@ app.post('/v1/article/:articleId/comment', (req, res) => {
     const { userId, content } = req.body;
 
     try {
-        const comment = addComment([articleId], userId, content);
+        const comment = addComment([articleId], parseInt(userId), content);
         res.status(SUCCESS).json(comment);
+    } catch (error) {
+        res.status(BAD).json({ error: error.message });
+    }
+});
+
+app.post('/v1/comment/reply', (req, res) => {
+    const { parentIds, userId, content } = req.body;
+
+    try {
+        const comment = addComment(parentIds, parseInt(userId), content);
+        res.status(SUCCESS).json(comment);
+    } catch (error) {
+        res.status(BAD).json({ error: error.message });
+    }
+});
+
+app.post('/v1/article/upload', (req, res) => {
+    const {session, title, summary, content, long, price, tags, preId} = req.body;
+
+    try {
+        res.status(SUCCESS).json(articleUpload(
+            session,
+            title,
+            summary,
+            content,
+            JSON.parse(long),
+            parseFloat(price),
+            tags,
+            parseInt(preId)));
+    } catch (error) {
+        res.status(BAD).json({ error: error.message });
+    }
+});
+
+app.put('/v1/article/:articleId/update', (req, res) => {
+    const {session, title, summary, content, rating, long, price, tags, preId} = req.body;
+    const articleId = parseInt(req.params.articleId);
+
+    try {
+        res.status(SUCCESS).json(articleUpdate(
+            session,
+            title,
+            summary,
+            content,
+            parseFloat(rating),
+            JSON.parse(long),
+            parseFloat(price),
+            tags,
+            articleId,
+            parseInt(preId)));
     } catch (error) {
         res.status(BAD).json({ error: error.message });
     }
