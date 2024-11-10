@@ -1,61 +1,215 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns="http://www.w3.org/1999/html">
 <head>
-  <meta charset="UTF-8">
-  <title>Title</title>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        .functions {
+            border: 1px solid black;
+            margin: 10px;
+        }
+        div {
+            margin: 10px;
+        }
+    </style>
 </head>
 <body>
-  <script src="index.js"></script>
-  <label id="status"></label>
-  <div></div>
-  <div>
-    <label for="id"></label><input id="id" type="text" placeholder="Your ID">
-    <button onclick="user(
-        document.getElementById('id').value,
-        document.getElementById('status')
-        )">Get Details</button>
-  </div>
-  <div>
-    <label for="session"></label><input id="session" type="text" placeholder="Your Session ID">
-    <button onclick="logout(
-        document.getElementById('id').value,
-        document.getElementById('session').value,
-        document.getElementById('status'))">Sign Out</button>
-  </div>
-  <div>
-    <label for="new username"></label><input id="new username" type="text" placeholder="New Username">
-    <label for="new firstname"></label><input id="new firstname" type="text" placeholder="New First Name">
-    <label for="new lastname"></label><input id="new lastname" type="text" placeholder="New Last Name">
-    <button onclick="update(
-        document.getElementById('new username').value,
-        document.getElementById('new firstname').value,
-        document.getElementById('new lastname').value,
-        document.getElementById('id').value,
-        document.getElementById('status'))">Update</button>
-  </div>
-  <div>
-    <label for="new email"></label><input id="new email" type="email" placeholder="New Email">
-    <button onclick="newEmail(
-        document.getElementById('new email').value,
-        document.getElementById('id').value,
-        document.getElementById('status'))">Update</button>
-  </div>
-  <div>
-    <label for="old password"></label><input id="old password" type="password" placeholder="Old Password">
-    <label for="new password"></label><input id="new password" type="password" placeholder="New Password">
-    <button onclick="newPassword(
-        document.getElementById('old password').value,
-        document.getElementById('new password').value,
-        document.getElementById('id').value,
-        document.getElementById('status'))">Update</button>
-  </div>
+<script src="index.js"></script>
 <div>
-  <label for="password"></label><input id="password" type="password" placeholder="Password">
-  <button onclick="remove(
-          document.getElementById('password').value,
-          document.getElementById('id').value,
-          document.getElementById('status'))">Delete</button>
+    <label id="status" style="margin: 10px"></label>
 </div>
-
+<div class="functions">
+    <div>
+        <h4>User Details</h4>
+    </div>
+    <div>
+        <label for="id"></label><input id="id" type="text" placeholder="Your ID">
+        <button onclick="user(
+            document.getElementById('id').value,
+            document.getElementById('status'))">
+            Get Details
+        </button>
+    </div>
+</div>
+<div class="functions">
+    <div>
+        <h4>Sign Out</h4>
+        <label>Use User Details to input user id</label>
+    </div>
+    <div>
+        <label for="session"></label><input id="session" type="text" placeholder="Your Session ID">
+        <button onclick="logout(
+            document.getElementById('id').value,
+            document.getElementById('session').value,
+            document.getElementById('status'))">
+            Sign Out
+        </button>
+    </div>
+</div>
+<div class="functions">
+    <div>
+        <h4>Update User Details</h4>
+        <label>Use User Details to input user id</label>
+    </div>
+    <div>
+        <label for="new username"></label><input id="new username" type="text" placeholder="New Username">
+        <label for="new firstname"></label><input id="new firstname" type="text" placeholder="New First Name">
+        <label for="new lastname"></label><input id="new lastname" type="text" placeholder="New Last Name">
+        <button onclick="update(
+            document.getElementById('new username').value,
+            document.getElementById('new firstname').value,
+            document.getElementById('new lastname').value,
+            document.getElementById('id').value,
+            document.getElementById('status'))">
+            Update
+        </button>
+    </div>
+</div>
+<div class="functions">
+    <div>
+        <h4>Update User Email</h4>
+        <label>Use User Details to input user id</label>
+    </div>
+    <div>
+        <label for="new email"></label><input id="new email" type="email" placeholder="New Email">
+        <button onclick="newEmail(
+            document.getElementById('new email').value,
+            document.getElementById('id').value,
+            document.getElementById('status'))">
+            Update
+        </button>
+    </div>
+</div>
+<div class="functions">
+    <div>
+        <h4>Update User Password</h4>
+        <label>Use User Details to input user id</label>
+    </div>
+    <div>
+        <label for="old password"></label><input id="old password" type="password" placeholder="Old Password">
+        <label for="new password"></label><input id="new password" type="password" placeholder="New Password">
+        <button onclick="newPassword(
+            document.getElementById('old password').value,
+            document.getElementById('new password').value,
+            document.getElementById('id').value,
+            document.getElementById('status'))">
+            Update
+        </button>
+    </div>
+</div>
+<div class="functions">
+    <div>
+        <h4>Delete User Account</h4>
+        <label>Use User Details to input user id</label>
+    </div>
+    <div>
+        <label for="password"></label><input id="password" type="password" placeholder="Password">
+        <button onclick="remove(
+            document.getElementById('password').value,
+            document.getElementById('id').value,
+            document.getElementById('status'))">
+            Delete
+        </button>
+    </div>
+</div>
+<div class="functions">
+    <div>
+        <h4>Article Upload</h4>
+        <label>Use User Details to input user id</label>
+    </div>
+    <div>
+        <label for="title"></label><input id="title" type="text" placeholder="Your Title">
+        <label for="summary"></label><input id="summary" type="text" placeholder="Your Summary">
+        <label for="content"></label><input id="content" type="text" placeholder="Your Content">
+        <label for="long">Long?</label><input id="long" type="checkbox">
+        <label for="price"></label><input id="price" type="text" placeholder="Your Price">
+        <label for="tags"></label><input id="tags" type="text" placeholder="Your Tags (in json format)">
+        <label for="preId"></label><input id="preId" type="text" placeholder="Your previous article ID, -1 if no previous article"></input>
+        <button onclick="upload(
+            document.getElementById('id').value,
+            document.getElementById('title').value,
+            document.getElementById('summary').value,
+            document.getElementById('content').value,
+            document.getElementById('long').checked,
+            document.getElementById('price').value,
+            JSON.parse(document.getElementById('tags').value),
+            document.getElementById('preId').value,
+            document.getElementById('status'))">
+            Upload
+        </button>
+    </div>
+</div>
+<div class="functions">
+    <div>
+        <h4>Get Article Details</h4>
+    </div>
+    <div>
+        <label for="articleId"></label><input id="articleId" type="text" placeholder="Article ID">
+        <button onclick="articleDetails(
+            document.getElementById('articleId').value,
+            document.getElementById('status'))">
+            Get Details
+        </button>
+    </div>
+</div>
+<div class="functions">
+    <div>
+        <h4>Article Update</h4>
+        <label style="display: block">Use User Details to input user id</label>
+        <label style="display: block">Use Article Upload to input new article details</label>
+        <label style="display: block">Use Article Details to input article id</label>
+    </div>
+    <div>
+        <label for="rating"></label><input id="rating" type="number" min="0" max="5" step="0.1" placeholder="Rating">
+        <button onclick="articleUpdate(
+            document.getElementById('id').value,
+            document.getElementById('title').value,
+            document.getElementById('summary').value,
+            document.getElementById('content').value,
+            document.getElementById('rating').value,
+            document.getElementById('long').checked,
+            document.getElementById('price').value,
+            JSON.parse(document.getElementById('tags').value),
+            document.getElementById('articleId').value,
+            document.getElementById('preId').value,
+            document.getElementById('status'))">
+            Update
+        </button>
+    </div>
+</div>
+<div class="functions">
+    <div>
+        <h4>Add Comment to Article</h4>
+        <label style="display: block">Use User Details to input user id</label>
+        <label style="display: block">Use Article Details to input article id</label>
+    </div>
+    <div>
+        <label for="comment"></label><input id="comment" type="text" placeholder="Comment">
+        <button onclick="addComment(
+            document.getElementById('articleId').value,
+            document.getElementById('id').value,
+            document.getElementById('comment').value,
+            document.getElementById('status'))">
+            Add Comment
+        </button>
+    </div>
+</div>
+<div class="functions">
+    <div>
+        <h4>Article Update</h4>
+        <label>Use User Details to input user id</label>
+    </div>
+    <div>
+        <label for="parentIds"></label><input id="parentIds" type="text" placeholder="ParentIds in JSON format">
+        <label for="reply"></label><input id="reply" type="text" placeholder="Reply">
+        <button onclick="addReply(
+            JSON.parse(document.getElementById('parentIds').value),
+            document.getElementById('id').value,
+            document.getElementById('reply').value,
+            document.getElementById('status'))">
+            Add Reply
+        </button>
+    </div>
+</div>
 </body>
 </html>
