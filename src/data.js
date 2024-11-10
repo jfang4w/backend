@@ -413,7 +413,8 @@ export function getSessionIndex(userIndex, sessionId) {
 
 export function appendSession(userIndex) {
     // const sessionId = users[userIndex].activeSessions.length;
-    const sessionId = users[userIndex].activeSessions[users[userIndex].activeSessions.length-1]+1;
+    const sessionId = users[userIndex].activeSessions.length > 0?
+        users[userIndex].activeSessions[users[userIndex].activeSessions.length-1]+1 : 0;
     users[userIndex].activeSessions.push(sessionId);
     return sessionId;
 }
