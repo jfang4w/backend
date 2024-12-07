@@ -11,7 +11,7 @@ import {
     getSessionIndex,
     removeSession,
     appendSession
-} from "./data.js";  // was ./utils/userUtils
+} from "./data.js";
 
 import {
     isValidEmail,
