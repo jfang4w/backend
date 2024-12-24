@@ -287,7 +287,7 @@ function getVariable(type) {
  */
 export function getData(target, id) {
     const data = getVariable(target);
-    return deepCopy(data[id]);  // clone to avoid direct change in the database
+    return (data[id]) ? deepCopy(data[id]) : null;  // clone to avoid direct change in the database
 }
 
 /**
