@@ -16,6 +16,7 @@ import {
 } from "./utils/validations.js";
 
 import {Status, Target} from "./const.js";
+import {solve} from "./utils/asyncUtils.js";
 
 
 function validate(session, name, summary, content) {
@@ -37,8 +38,8 @@ function validate(session, name, summary, content) {
     return true;
 }
 
-function getAuthorName(session) {  // to be replaced in future
-    return parseInt(session);
+async function getAuthorId(session) {  // to be replaced in future
+    return parseInt(session);  // STUB!
 }
 
 /**
@@ -54,27 +55,28 @@ function getAuthorName(session) {  // to be replaced in future
  * @param {int} previousArticleId - Previous chapter's article's id
  * @returns return empty object if upload success
  */
-export function articleUpload(session, title, summary, content, long, price,
+export async function articleUpload(session, title, summary, content, long, price,
     tags, previousArticleId) {
 
     validate(session, title, summary, content);
 
-    if (isValidArticle(previousArticleId)) {
-        let previous = getData(Target.article, previousArticleId);
-        previous.nextChap = articleId;
-        updateData(previous);
-    }
-
-    const articleId = newId(Target.article);
+    const [validPreArticleId, articleId, authorId] = await solve(isValidArticle(previousArticleId), newId(Target.article), getAuthorId(session));
+    const authorPromise = getData(Target.user, authorId);
     const date = new Date();
 
-    addData(newArticle(
+    if (validPreArticleId) {
+        let previous = await getData(Target.article, previousArticleId);
+        previous.nextChap = articleId;
+        await updateData(previous);
+    }
+
+    await addData(newArticle(
         articleId,
         Status.public,  // change in future to allow the author to set the visibility when uploading the article
         title,
         summary,
         content,
-        getAuthorName(session),
+        authorId,
         date,
         date,
         -1,
@@ -87,10 +89,9 @@ export function articleUpload(session, title, summary, content, long, price,
         [], // comments set to an empty array
         []
     ));
-
-    const author = getData(Target.user, getAuthorName(session));
+    const author = await authorPromise;
     author.publishedArticles.push(articleId);
-    updateData(author);
+    await updateData(author);
     return {};
 }
 
@@ -108,16 +109,16 @@ export function articleUpload(session, title, summary, content, long, price,
  * @param {number} targetArticleId
  * @param {number} nextArticle - the id of the next article
  */
-export function articleUpdate(session, title, summary, content, rating, long, price, tags, targetArticleId, nextArticle) {
+export async function articleUpdate(session, title, summary, content, rating, long, price, tags, targetArticleId, nextArticle) {
     validate(session, title, summary, content);
 
-    if ((!isValidArticle(nextArticle) && nextArticle >= 0) || !isValidArticle(targetArticleId)) {
+    const [validNextArticle, article] = await solve(isValidArticle(nextArticle), getData(Target.article, targetArticleId));
+
+    if ((!validNextArticle && nextArticle >= 0) || article === null) {
         throw new Error("Invalid article Id.");
     }
 
-    const article = getData(Target.article, targetArticleId);
-
-    updateData(newArticle(
+    await updateData(newArticle(
         targetArticleId,
         article.status,  // change in future to enable status change (e.g. from public to private or delete it)
         title,
@@ -139,8 +140,8 @@ export function articleUpdate(session, title, summary, content, rating, long, pr
     return {};
 }
 
-export function getArticleDetails(articleId) {
-    return getData(Target.article, articleId);
+export async function getArticleDetails(articleId) {
+    return await getData(Target.article, articleId);
 }
 
 /**
@@ -150,6 +151,6 @@ export function getArticleDetails(articleId) {
  * @param {string} commentContent
  * @returns {Object} the comment
  */
-export function addComment(articleId, userId, commentContent) {
-    return addComments(articleId, userId, commentContent);
+export async function addComment(articleId, userId, commentContent) {
+    return await addComments(articleId, userId, commentContent);
 }

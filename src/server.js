@@ -34,134 +34,134 @@ app.use(express.json());
 app.use(cors()); // use cors to allow cross-origin
 
 // API for all the features
-app.post('/v1/signup', (req, res) => {
+app.post('/v1/signup', async (req, res) => {
     const { email, password, username } = req.body;
     try {
-        res.status(SUCCESS).json(userSignup(email, password, username));
+        res.status(SUCCESS).json(await userSignup(email, password, username));
     }
     catch (error) {
         res.status(BAD).json({ error: error.message });
     }
 });
 
-app.post('/v1/signin', (req, res) => {
+app.post('/v1/signin', async (req, res) => {
     const { email, password } = req.body;
     try {
-        res.status(SUCCESS).json(userSignIn(email, password));
+        res.status(SUCCESS).json(await userSignIn(email, password));
     }
     catch (error) {
         res.status(BAD).json({ error: error.message });
     }
 });
 
-app.post('/v1/signout', (req, res) => {
+app.post('/v1/signout', async (req, res) => {
     const userId = parseInt((req.body.userId).toString());
     const sessionId = parseInt((req.body.sessionId).toString());
     try {
-        res.status(SUCCESS).json(userSignOut(userId, sessionId));
+        res.status(SUCCESS).json(await userSignOut(userId, sessionId));
     }
     catch (error) {
         res.status(BAD).json({ error: error.message });
     }
 });
 
-app.get('/v1/user/:userId', (req, res) => {
+app.get('/v1/user/:userId', async (req, res) => {
     const userId = parseInt((req.params.userId).toString());
     try {
-        res.status(SUCCESS).json(userDetail(userId));
+        res.status(SUCCESS).json(await userDetail(userId));
     }
     catch (error) {
         res.status(BAD).json({ error: error.message });
     }
 });
 
-app.put("/v1/user/update", (req, res) => {
+app.put("/v1/user/update", async (req, res) => {
     let { username, nameFirst, nameLast, userId } = req.body;
     userId = parseInt(userId);
 
     try {
-        res.status(SUCCESS).json(userDetailUpdate(userId, username, nameFirst, nameLast));
+        res.status(SUCCESS).json(await userDetailUpdate(userId, username, nameFirst, nameLast));
     }
     catch (error) {
         res.status(BAD).json({ error: error.message });
     }
 });
 
-app.put("/v1/user/email", (req, res) => {
+app.put("/v1/user/email", async (req, res) => {
     let { newEmail, userId } = req.body;
     userId = parseInt(userId);
 
     try {
-        res.status(SUCCESS).json(userEmailUpdate(userId, newEmail));
+        res.status(SUCCESS).json(await userEmailUpdate(userId, newEmail));
     }
     catch (error) {
         res.status(BAD).json({ error: error.message });
     }
 });
 
-app.put("/v1/user/password", (req, res) => {
+app.put("/v1/user/password", async (req, res) => {
     let { oldPassword, newPassword, userId } = req.body;
     userId = parseInt(userId);
 
     try {
-        res.status(SUCCESS).json(userPasswordUpdate(userId, oldPassword, newPassword));
+        res.status(SUCCESS).json(await userPasswordUpdate(userId, oldPassword, newPassword));
     }
     catch (error) {
         res.status(BAD).json({ error: error.message });
     }
 });
 
-app.delete('/v1/user/:userId/delete', (req, res) => {
+app.delete('/v1/user/:userId/delete', async (req, res) => {
     const userId = parseInt((req.params.userId).toString());
     const { password } = req.body;
 
     try {
-        res.status(SUCCESS).json(userDelete(userId, password));
+        res.status(SUCCESS).json(await userDelete(userId, password));
     }
     catch (error) {
         res.status(BAD).json({ error: error.message });
     }
 });
 
-app.get('/v1/article/:articleId', (req, res) => {
+app.get('/v1/article/:articleId', async (req, res) => {
     const articleId = parseInt(req.params.articleId);
 
     try {
-        const article = getArticleDetails(articleId);
+        const article = await getArticleDetails(articleId);
         res.status(SUCCESS).json(article);
     } catch (error) {
         res.status(BAD).json({ error: error.message });
     }
 });
 
-app.post('/v1/article/:articleId/comment', (req, res) => {
+app.post('/v1/article/:articleId/comment', async (req, res) => {
     const articleId = parseInt(req.params.articleId);
     const { userId, content } = req.body;
 
     try {
-        const comment = addComment([articleId], parseInt(userId), content);
+        const comment = await addComment([articleId], parseInt(userId), content);
         res.status(SUCCESS).json(comment);
     } catch (error) {
         res.status(BAD).json({ error: error.message });
     }
 });
 
-app.post('/v1/comment/reply', (req, res) => {
+app.post('/v1/comment/reply', async (req, res) => {
     const { parentIds, userId, content } = req.body;
 
     try {
-        const comment = addComment(parentIds, parseInt(userId), content);
+        const comment = await addComment(parentIds, parseInt(userId), content);
         res.status(SUCCESS).json(comment);
     } catch (error) {
         res.status(BAD).json({ error: error.message });
     }
 });
 
-app.post('/v1/article/upload', (req, res) => {
+app.post('/v1/article/upload', async (req, res) => {
     const {session, title, summary, content, long, price, tags, preId} = req.body;
 
     try {
-        res.status(SUCCESS).json(articleUpload(
+        res.status(SUCCESS).json(await articleUpload(
             session,
             title,
             summary,
@@ -175,7 +175,7 @@ app.post('/v1/article/upload', (req, res) => {
     }
 });
 
-app.put('/v1/article/:articleId/update', (req, res) => {
+app.put('/v1/article/:articleId/update', async (req, res) => {
     const {session, title, summary, content, rating, long, price, tags, preId} = req.body;
     const articleId = parseInt(req.params.articleId);
 
@@ -196,5 +196,5 @@ app.put('/v1/article/:articleId/update', (req, res) => {
     }
 });
 
-app.post('/v1/search/:searchTerm', (req, res) => {
+app.post('/v1/search/:searchTerm', async (req, res) => {
 });

@@ -8,15 +8,18 @@
 // };
 
 export const Target = {
-    u: 0,
-    user: 0,
-    users: 0,
-    a: 1,
-    article: 1,
-    articles: 1,
-    r: 2,
-    room: 2,
-    rooms: 2,
+    u: "users",
+    user: "users",
+    users: "users",
+    a: "articles",
+    article: "articles",
+    articles: "articles",
+    r: "rooms",
+    room: "rooms",
+    rooms: "rooms",
+    i: "images",
+    image: "images",
+    images: "images",
 };
 
 export const Status = {

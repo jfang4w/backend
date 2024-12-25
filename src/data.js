@@ -1,23 +1,21 @@
 import {Target} from './const.js';
+import {DBConnection} from "./utils/db.js";
+import {exit} from "process";
+import {solve} from "./utils/asyncUtils.js";
 
-let users = [], articles = [], rooms = [], images = [];
 
-export function initData(USERS = [], ARTICLES = [], ROOMS = []) {
-    users = USERS;
-    articles = ARTICLES;
-    rooms = ROOMS;
-}
+console.warn("DB Connection in Progress...");
+console.time("DB Connection")
+const db = new DBConnection();
+await db.connect();
+console.log("DB Connected");
+console.timeEnd("DB Connection");
 
-/**
- * Creates a deep copy of the target.
- * @param {Object} target - The array (or object) to be copied deeply.
- * @returns {Object} A new array that is a deep copy of the target.
- */
-function deepCopy(target) {
-    return JSON.parse(JSON.stringify(target));
-}
-
-// Previously users
+process.on("SIGINT", async () => {
+    await db.disconnect();
+    console.log("DB Disconnected");
+    exit(-1073741510);  // 0xC000013A: interrupted by Ctrl+C
+});
 
 /**
  * Represents a user account.
@@ -26,7 +24,7 @@ function deepCopy(target) {
  * @param {number} status - The status code of the user.
  * @param {number[]} following - The id of the user's following accounts
  * @param {number[]} followers - The id of the user's followers' accounts
- * @param {{String: String} | {}} nicknames - {id: this user's nickname to the id}
+ * @param {{string: string} | {}} nicknames - {id: this user's nickname to the id}
  * @param {number} likesGot - The total number of likes got by the user
  * @param {number[]} likes - The id of articles user liked.
  * @param {number[]} dislikes - The id of articles user disliked.
@@ -84,8 +82,6 @@ export function newUser(id, status, following, followers, nicknames, likesGot,
     };
 }
 
-// Previously articles
-
 /**
  * Parameters are the same as Replies.
  *
@@ -97,7 +93,8 @@ export function newUser(id, status, following, followers, nicknames, likesGot,
  * @param {Date} time - The time the reply was made.
  * @param {Object[]} reply - The reply.
  */
-export function newComment(id, content, author, likes, dislikes, time, reply) {
+export async function newComment(id, content, author, likes, dislikes, time, reply) {
+    const [user, article] = await solve([getData(Target.user, author), getData(Target.article, id[0])]);
     return {
         _type: 'comment',
         id: id,
@@ -107,8 +104,8 @@ export function newComment(id, content, author, likes, dislikes, time, reply) {
         dislikes: dislikes,
         time: time,
         reply: reply,
-        isAuthor: users[author].id === articles[id[0]].author,
-        isCommenter: id.length < 3 ? true : users[author].id === articles[id[0]].comments[id[1]].author
+        isAuthor: user.id === article.author,
+        isCommenter: id.length < 3 ? true : user.id === article.comments[id[1]].author
     };
 }
 
@@ -159,8 +156,6 @@ export function newArticle(id, status, title, summary, content, author,
     };
 }
 
-// Previously dm
-
 /**
  * Sends a message.
  *
@@ -199,8 +194,6 @@ export function newRoom(id, uid, nicknames, roomName, status, message) {
         message: message
     };
 }
-
-// New
 
 /**
  *
@@ -246,60 +239,24 @@ export function newAnnotation(id, userId, start, end, annotation, likes, status)
 
 /**
  *
- * @param {number|Object} type
- * @returns {Object[]}
- */
-function getVariable(type) {
-    if (typeof type === 'object') {
-        switch (type._type) {
-        case 'user':
-            return users;
-        case 'article':
-            return articles;
-        case 'room':
-            return rooms;
-        case 'image':
-            return images;
-        default:
-            throw new Error("Unknown type " + type._type);
-        }
-    }
-
-    switch (type) {
-    case Target.user:
-        return users;
-    case Target.article:
-        return articles;
-    case Target.room:
-        return rooms;
-    case Target.image:
-        return images;
-    default:
-        throw new Error(`Unknown type ${type}`);
-    }
-}
-
-/**
- *
- * @param {number} target what data is getting (users/articles/rooms)
+ * @param {string} target what data is getting (users/articles/rooms)
  * @param {number} id the value of id
  * @return {Object}
  */
-export function getData(target, id) {
-    const data = getVariable(target);
-    return (data[id]) ? deepCopy(data[id]) : null;  // clone to avoid direct change in the database
+export async function getData(target, id) {
+    return await db.get(target, {id: id});
 }
 
 /**
  *
- * @param {number} target what data is getting (users/articles/rooms)
+ * @param {string} target what data is getting (users/articles/rooms)
  * @param {number} id the value of id
  * @param {...string} elements the elements required
  * @returns {{}}
  */
-export function getPartialData(target, id, ...elements) {
+export async function getPartialData(target, id, ...elements) {
     let obj = {};
-    const variable = getData(target, id);
+    const variable = await getData(target, id);
     elements.forEach(param => obj[param] = variable[param]);
     return obj;
 }
@@ -308,30 +265,29 @@ export function getPartialData(target, id, ...elements) {
  *
  * @param {Object} newValue the new value
  */
-export function updateData(newValue) {
-    getVariable(newValue)[newValue.id] = newValue;
+export async function updateData(newValue) {
+    await db.put(Target[newValue._type], {id: newValue.id}, newValue);
 }
 
-export function newId(target) {
-    return getVariable(target).length;
+export async function newId(target) {
+    return await db.count(target);
 }
 
-export function addData(newValue) {
-    getVariable(newValue).push(newValue);
+export async function addData(newValue) {
+    await db.post(Target[newValue._type], newValue);
 }
 
-function  newCommentId(parentIds) {
-    let comment = getData(Target.article, parentIds[0]).comments;
+async function newCommentId(parentIds) {
+    let comment = await getData(Target.article, parentIds[0]).comments;
     for (let i = 1; i < parentIds.length; i++) {
-        // comment = comment.find(comment => comment.id[comment.id.length-1] === parentIds[i]).reply;
         comment = comment[parentIds[i]].reply;
     }
     return comment.length;
 }
 
-export function addComments(parentIds, userId, content) {
-    const commentId = newCommentId(parentIds);
-    const comment = newComment(
+export async function addComments(parentIds, userId, content) {
+    let [commentId, parent] = await solve([newCommentId(parentIds), getData(Target.articles, parentIds[0])]);
+    const comment = await newComment(
         parentIds.concat(commentId),
         content,
         userId,
@@ -341,9 +297,10 @@ export function addComments(parentIds, userId, content) {
         []
     );  // create the comment object
 
-    let parent = articles[parentIds[0]];  // set the parent comment to the article itself.
+    const newValue = parent;
     if (parentIds.length === 1) {  // if the article is the only parent
         parent.comments.push(comment);  // push this comment to the article's comment list
+        await db.put(Target.article, {id: parentIds[0]}, newValue);
         return comment;
     }
 
@@ -352,6 +309,7 @@ export function addComments(parentIds, userId, content) {
         parent = parent[parentIds[i]].reply;  // find the parent of this reply
     }
     parent.push(comment);  // add this reply to the parent
+    await db.put(Target.article, {id: parentIds[0]}, newValue);
     return comment;
 }
 
@@ -364,8 +322,8 @@ export function addComments(parentIds, userId, content) {
  * @param {string} content
  * @param {number} status
  */
-export function addAnnotations(articleId, userId, start, end, content, status) {
-    const article = getData(Target.article, articleId);
+export async function addAnnotations(articleId, userId, start, end, content, status) {
+    const article = await getData(Target.article, articleId);
     article.annotations.push(newAnnotation(
         article.annotations.length,
         userId,
@@ -375,58 +333,59 @@ export function addAnnotations(articleId, userId, start, end, content, status) {
         [],
         status
     ));
-    updateData(article);
+    await updateData(article);
 }
 
 /**
+ * !!STUB!!
  *
- * @param {Image} image
+ * @param {string} image
  * @returns {string}
  */
-function storeImage(image) {
+async function storeImage(image) {
     /*
     Validation, virus scan, cropping over-sized images, storing, etc. to be performed here.
      */
-    return `url of the stored${image}`;
+    const result = await db.post(Target.image, {image: image});
+    return result.url;
 }
 
-export function addImages(authorId, image, alt, status) {
-    const url = storeImage(image);
-    images.push(newImage(
-        newId(Target.image),
+export async function addImages(authorId, image, alt, status) {
+    const [url, id] = await solve([storeImage(image), newId(Target.image)]);
+    const img = newImage(
+        id,
         authorId,
         url,
         alt,
         status
-    ));
+    );
+    await db.post(Target.image, img);
 }
 
-export function exist(type, value) {
-    return users.find(user => user[type] === value);
+export async function getUserBy(type, value) {
+    let query = {};
+    query[type] = value;
+    return await db.get(Target.user, query);
 }
 
-// The following function was in ./utils/userUtils.js
-
-export function getSessionIndex(userIndex, sessionId) {
-    return users[userIndex].activeSessions.findIndex(element => element === sessionId);
+export function getSessionIndex(user, sessionId) {
+    return user.activeSessions.findIndex(element => element === sessionId);
 }
 
-export function appendSession(userIndex) {
-    // const sessionId = users[userIndex].activeSessions.length;
-    const sessionId = users[userIndex].activeSessions.length > 0?
-        users[userIndex].activeSessions[users[userIndex].activeSessions.length-1]+1 : 0;
-    users[userIndex].activeSessions.push(sessionId);
+export function appendSession(user) {
+    const sessionId = user.activeSessions.length > 0?
+        user.activeSessions[user.activeSessions.length-1]+1 : 0;
+    user.activeSessions.push(sessionId);
     return sessionId;
 }
 
-export function removeSession(userIndex, sessionIndex) {
-    users[userIndex].activeSessions.splice(sessionIndex, 1);
+export async function removeSession(user, sessionIndex) {
+    user.activeSessions.splice(sessionIndex, 1);
+    await updateData(user);
 }
 
-// The following function was in ./search.js
-
-export function search(searchTerm) {
-    return articles.filter((e) => e.content.includes(searchTerm) | e.title.includes(searchTerm)).map(e => ({
+export async function search(searchTerm) {
+    return await db.search(searchTerm).filter((e) => e.content.includes(searchTerm) | e.title.includes(searchTerm)).map(e => ({
         id: e.id,
         author: e.author,
         title: e.title,

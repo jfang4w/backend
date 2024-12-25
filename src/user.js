@@ -3,11 +3,8 @@ import {
     getData,
     newId,
     newUser,
-    exist,
-    addData
-} from "./data.js";
-
-import {
+    getUserBy,
+    addData,
     getSessionIndex,
     removeSession,
     appendSession
@@ -16,11 +13,12 @@ import {
 import {
     isValidEmail,
     isValidName,
-    isValidPassword, isValidUserId,
+    isValidPassword,
     isValidUsername
 } from "./utils/validations.js";
 
 import {Status, Target} from "./const.js";
+import {solve} from "./utils/asyncUtils.js";
 
 /**
  * Register a user with an email, password, and names,
@@ -32,8 +30,7 @@ import {Status, Target} from "./const.js";
  * @returns {number} Return a unique ID for the new user
  * if the registration is successful
  */
-export function userSignup(email, password, username) {
-    const id = newId(Target.user);
+export async function userSignup(email, password, username) {
 
     if (!isValidEmail(email)) {
         throw new Error('Invalid email format.');
@@ -47,15 +44,17 @@ export function userSignup(email, password, username) {
         throw new Error("The username is invalid, username must be at least 3 characters long with only letters, numbers and hyphen.");
     }
 
-    if (exist('username', username)) {
+    const [usernameExists, emailExists, id] = await solve(getUserBy('username', username), getUserBy('email', email), newId(Target.user));
+
+    if (usernameExists) {
         throw new Error("The username already been used.");
     }
 
-    if (exist('email', email)) {
+    if (emailExists) {
         throw new Error('This email has already being used.');
     }
 
-    addData(newUser(
+    await addData(newUser(
         id,
         Status.public,
         [],
@@ -93,24 +92,23 @@ export function userSignup(email, password, username) {
  * @param {string} password - The registered user's password
  * @returns - Return the registered user's ID
  */
-export function userSignIn(email, password) {
-    // const data = getData();
-
+export async function userSignIn(email, password) {
     if (!email) {
         throw new Error('Empty email.');
     }
     else if (!password) {
         throw new Error('Empty password.');
     }
+    const user = await getUserBy('email', email);
 
-    // const user = data.users.find
-    const user = exist('email', email);
-
-    if (user === undefined || user.password !== password) {
+    if (!user) {
+        throw new Error('The email and password combination does not exist.');
+    }
+    if (user.password !== password){
         throw new Error('The email and password combination does not exist.');
     }
 
-    return { sessionId: appendSession(user.id), id: user.id };
+    return { sessionId: appendSession(user), id: user.id };
 }
 
 /**
@@ -122,32 +120,32 @@ export function userSignIn(email, password) {
  * @returns Return a unique ID for the new user
  * if the registration is successful
  */
-export function userSignOut(userId, sessionId) {
-    // const userIndex = getIndex(Target.user, userId);
+export async function userSignOut(userId, sessionId) {
+    const user = await getData(Target.user, userId);
 
-    if (!isValidUserId(userId)) {
+    if (user === null) {
         throw new Error("This user is not signed in.");
     }
 
-    const sessionIndex = getSessionIndex(userId, sessionId);
+    const sessionIndex = getSessionIndex(user, sessionId);
 
     if (sessionIndex === -1) {
         throw new Error("This session has already been signed out.");
     }
 
-    removeSession(userId, sessionIndex);
+    await removeSession(user, sessionIndex);
     return {};
 }
 
-export function userDetail(id) {
-    const user = getData(Target.user, id);
-    if (user == null) {
+export async function userDetail(id) {
+    const user = await getData(Target.user, id);
+    if (user === null) {
         throw new Error("The user doesn't exist.");
     }
     return user;
 }
 
-export function userDetailUpdate(userId, username, nameFirst, nameLast) {
+export async function userDetailUpdate(userId, username, nameFirst, nameLast) {
     if (!isValidName(nameFirst)) {
         throw new Error('Invalid first name, you must enter at lease 3 characters.');
     }
@@ -155,70 +153,47 @@ export function userDetailUpdate(userId, username, nameFirst, nameLast) {
         throw new Error('Invalid last name, you must enter at lease 3 characters');
     }
 
-    // const data = getData();
-    // const userIndex = getIndex(Target.user, userId);
+    const user = await getData(Target.user, userId);
 
-    if (userId >= newId(Target.user)) {
+    if (user === null) {
         throw new Error("The user doesn't exist.");
     }
-
-    const user = getData(Target.user, userId);
 
     user.username = username;
     user.nameFirst = nameFirst;
     user.nameLast = nameLast;
 
-    updateData(user);
-
-    // data.users[userIndex].username = username;
-    // data.users[userIndex].nameFirst = nameFirst;
-    // data.users[userIndex].nameLast = nameLast;
-    //
-    // setData(data);
+    await updateData(user);
     return {};
 }
 
-export function userEmailUpdate(userId, newEmail) {
+export async function userEmailUpdate(userId, newEmail) {
     if (!isValidEmail(newEmail)) {
         throw new Error('Invalid email format.');
     }
 
-    // const data = getData();
-    // if (!(!data.users || data.users.length === 0)) {
-    //     if (data.users.some(element => element.email === newEmail)) {
-    //         throw new Error('This email has already being used.');
-    //     }
-    // }
+    const [user, email] = await solve(getData(Target.user, userId), getUserBy('email', newEmail));
 
-    if (exist('email', newEmail)) {
-        throw new Error('This email has already being used.');
-    }
-
-    // const userIndex = getIndex(Target.user, userId);
-
-    if (!isValidUserId(userId)) {
+    if (user === null) {
         throw new Error("The user doesn't exist.");
     }
 
-    let user = getData(Target.user, userId);
+    if (email) {
+        throw new Error('This email has already being used.');
+    }
     user.email = newEmail;
-    updateData(user);
-
-    // data.users[userIndex].email = newEmail;
-    // setData(data);
+    await updateData(user);
     return {};
 }
 
-export function userPasswordUpdate(userId, oldPassword, newPassword) {
+export async function userPasswordUpdate(userId, oldPassword, newPassword) {
     if (!isValidPassword(newPassword)) {
         throw new Error('Password too weak, you must have at least 6 characters with at least 1 number or 1 letter.');
     }
 
-    // const data = getData();
-    // const userIndex = getIndex(Target.user, userId);
-    let user = getData(Target.user, userId);
+    let user = await getData(Target.user, userId);
 
-    if (!isValidUserId(userId)) {
+    if (user === null) {
         throw new Error("The user doesn't exist.");
     }
 
@@ -231,17 +206,14 @@ export function userPasswordUpdate(userId, oldPassword, newPassword) {
     }
 
     user.password = newPassword;
-    updateData(user);
-    // setData(data);
+    await updateData(user);
     return {};
 }
 
-export function userDelete(userId, password) {
-    // const data = getData();
-    // const userIndex = getIndex(Target.user, userId);
-    let user = getData(Target.user, userId);
+export async function userDelete(userId, password) {
+    let user = await getData(Target.user, userId);
 
-    if (!isValidUserId(userId)) {
+    if (user === null) {
         throw new Error("The user doesn't exist.");
     }
 
@@ -251,12 +223,6 @@ export function userDelete(userId, password) {
 
     user.status = Status.deletedByUser; // change in future to allow more deletion reasons.
 
-    updateData(user);
-
-    // runFunction(0, function (data) {
-    //     data.splice(userId, 1);
-    // });
-    // data.users.splice(userIndex, 1);
-    // setData(data);
+    await updateData(user);
     return {};
 }
