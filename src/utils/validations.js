@@ -41,7 +41,7 @@ export function isValidName(name) {
 }
 
 export function isValidSession(veri_session) {
-    // data = getData();
+    // data = getDataById();
     //data.sessions.find(session => session.sessionId = veri_session.sessionId);
     return true;  // STUB!
 } 

@@ -18,224 +18,145 @@ process.on("SIGINT", async () => {
 });
 
 /**
- * Represents a user account.
- *
- * @param {number} id - The unique ID of the user.
- * @param {number} status - The status code of the user.
- * @param {number[]} following - The id of the user's following accounts
- * @param {number[]} followers - The id of the user's followers' accounts
- * @param {{string: string} | {}} nicknames - {id: this user's nickname to the id}
- * @param {number} likesGot - The total number of likes got by the user
- * @param {number[]} likes - The id of articles user liked.
- * @param {number[]} dislikes - The id of articles user disliked.
- * @param {string} username - The user's username
- * @param {string} nameFirst - The user's first name.
- * @param {string} nameLast - The user's last name.
- * @param {string} email - The user's email address.
- * @param {string} password - The user's password.
- * @param {number} passwordAttempt - The number of password attempts made.
- * @param {Date} accountCreateDate - The date the account was created.
- * @param {number[]} publishedArticles - An array of published article IDs.
- * @param {number[]} activeSessions - An array of active session IDs.
- * @param {number} revenue - The writer's revenue from subscription.
- * @param {number} balance - The user's balance.
- * @param {number} coins - The number of coins to redeem access of paid articles.
- * @param {number[]} unlockedArticles - The paid articles that the user has access to.
- * @param {number[]} roomIn - The rooms that the user is in.
- * @param {number[]} roomCreated - The rooms that the user created.
- * @param {number[]} subscription - (if non-negative) The ids of users that this user has subscribed; (if negative) The subscription plans (in the future)
- * @param {number[]} subscribers - The ids of users who subscribed this user.
+ * @param {number} id
+ * @param {string} username
+ * @param {string} email
+ * @param {string} password
+ * @param {number[]} library
+ * @param {string} avatar
+ * @param {number[]} publications
+ * @param {number[]} followers
+ * @param {number[]} following
+ * @param {any} emailPreference
+ * @param {string} bio
+ * @param {number} likes
+ * @param {number} balance
+ * @param {number[]} activeChats
+ * @param {number[]} activeSessions
  */
-export function newUser(id, status, following, followers, nicknames, likesGot, 
-    likes, dislikes, username, nameFirst, nameLast, email, password,
-    passwordAttempt, accountCreateDate, publishedArticles, activeSessions, revenue,
-    balance, coins, unlockedArticles, roomIn, roomCreated,
-    subscription, subscribers) {
-    
+export function newUser(id, username, email, password, library, avatar, publications, followers, following,
+                        emailPreference, bio, likes, balance, activeChats, activeSessions) {
     return {
         _type: 'user',
         id: id,
-        status: status,
-        following: following,
-        followers: followers,
-        nicknames: nicknames,
-        likesGot: likesGot,
-        likes: likes,
-        dislikes: dislikes,
         username: username,
-        nameFirst: nameFirst,
-        nameLast: nameLast,
         email: email,
         password: password,
-        passwordAttempt: passwordAttempt,
-        accountCreateDate: accountCreateDate,
-        publishedArticles: publishedArticles,
-        activeSessions: activeSessions,
-        revenue: revenue,
+        library: library,
+        avatar: avatar,
+        publications: publications,
+        followers: followers,
+        following: following,
+        emailPreference: emailPreference,
+        bio: bio,
+        likes: likes,
         balance: balance,
-        coins: coins,
-        unlockedArticles: unlockedArticles,
-        roomIn: roomIn,
-        roomCreated: roomCreated,
-        subscription: subscription,
-        subscribers: subscribers
+        activeChats: activeChats,
+        activeSessions: activeSessions
     };
 }
 
 /**
- * Parameters are the same as Replies.
- *
- * @param {number[]} id - [<article id>, <comment id>]
- * @param {string} content - The content of the reply.
- * @param {number} author - The ID of the author.
- * @param {number[]} likes - The id of users who like the reply.
- * @param {number[]} dislikes - The id of users who hate the reply.
- * @param {Date} time - The time the reply was made.
- * @param {Object[]} reply - The reply.
+ * @param {number[]} id
+ * @param {number} author
+ * @param {string} body
+ * @param {Comment[]} replies
+ * @param {number} likes
+ * @param {number} dislikes
+ * @param {Date} commentTime
  */
-export async function newComment(id, content, author, likes, dislikes, time, reply) {
-    const [user, article] = await solve([getData(Target.user, author), getData(Target.article, id[0])]);
+export async function newComment(id, author, body, replies, likes, dislikes, commentTime) {
+    const [user, article] = await solve([getDataById(Target.user, author), getDataById(Target.article, id[0])]);
     return {
         _type: 'comment',
         id: id,
-        content: content,
         author: author,
+        isArticleAuthor: user.id === article.author,
+        isRootAuthor: id.length < 3 ? true : user.id === article.comments[id[1]].author,
+        body: body,
         likes: likes,
         dislikes: dislikes,
-        time: time,
-        reply: reply,
-        isAuthor: user.id === article.author,
-        isCommenter: id.length < 3 ? true : user.id === article.comments[id[1]].author
+        commentTime: commentTime,
     };
 }
 
 /**
  * Creates a new chapter.
  *
- * @param {number} id - The chapter ID.
- * @param {number} status - The status code.
- * @param {string} title - The title of the chapter.
- * @param {string} summary - A brief summary of the chapter.
- * @param {string} content - The content of the chapter (HTML formatted).
- * @param {number} author - The ID of the author.
- * @param {Date} initialCreateTime - The time when the chapter was initially created.
- * @param {Date} lastEditTime - The time when the chapter was last edited.
- * @param {number} nextChap - The ID of the next chapter.
- * @param {number} rating - The rating of the chapter.
- * @param {number[]} likes - The id of users who like this article.
- * @param {number[]} dislikes - The id of users who dislike this article.
- * @param {boolean} long - Indicates if the chapter is long.
- * @param {number} price - The price of the chapter.
- * @param {string[]} tags - An array of tags associated with the chapter.
- * @param {Object[]} comments - An array of comments on the chapter.
- * @param {Object[]} annotations - An array of in-text annotations.
+ * @param {number} id
+ * @param {number} author
+ * @param {string} cover
+ * @param {string} title
+ * @param {string} summary
+ * @param {string} content
+ * @param {boolean} isSeries
+ * @param {Date} publishTime
+ * @param {Date} lastEdit
+ * @param {number} likes
+ * @param {number} dislikes
+ * @param {number} readTime
+ * @param {Comment[]} comments
+ * @param {number} previous
+ * @param {number} next
+ * @param {number} price
+ * @param {string[]} tags
  */
-export function newArticle(id, status, title, summary, content, author, 
-    initialCreateTime, lastEditTime, nextChap, rating, likes, dislikes,
-    long, price, tags, comments, annotations) {
-    
+export function newArticle(id, author, cover, title, summary, content, isSeries, publishTime, lastEdit, likes, dislikes,
+                           readTime, comments, previous, next, price, tags) {
     return {
         _type: 'article',
         id: id,
-        status: status,
+        author: author,
+        cover: cover,
         title: title,
         summary: summary,
         content: content,
-        author: author,
-        initialCreateTime: initialCreateTime,
-        lastEditTime: lastEditTime,
-        nextChap: nextChap,
-        rating: rating,
+        isSeries: isSeries,
+        publishTime: publishTime,
+        lastEdit: lastEdit,
         likes: likes,
         dislikes: dislikes,
-        long: long,
+        readTime: readTime,
+        comments: comments,
+        previous: previous,
+        next: next,
         price: price,
         tags: tags,
-        comments: comments,
-        annotations: annotations
     };
 }
 
 /**
- * Sends a message.
- *
- * @param {number} author - The ID of the message sender.
- * @param {Object|null} quote - Quoting a previous message.
- * @param {string} message - The content of the message.
- * @param {Date} time - The time the message was sent.
+ * @param {number} sender
+ * @param {Date} sendTime
+ * @param {string} body
  */
-export function newMessage(author, quote, message, time) {
+export function newMessage(sender, sendTime, body) {
     return {
         _type: 'message',
-        author: author,
-        quote: quote,
-        message: message,
-        time: time
+        sender: sender,
+        sendTime: sendTime,
+        body: body,
     };
 }
 
 /**
  *
- * @param {number} id room id
- * @param {number[]} uid list of ids of all users in this room
- * @param {Object} nicknames Key: the id of a user; Value: the nickname in this room
- * @param {string} roomName
- * @param {number} status
- * @param {Object[]} message
+ * @param {number} id
+ * @param {number[]} members
+ * @param {Message[]} messages
+ * @param {Date} createTime
+ * @param {string} groupName
  */
-export function newRoom(id, uid, nicknames, roomName, status, message) {
+export function newChat(id, members, messages, createTime, groupName) {
     return {
         _type: 'room',
         id: id,
-        uid: uid,
-        nicknames: nicknames,
-        roomName: roomName,
-        status: status,
-        message: message
+        members: members,
+        createTime: createTime,
+        groupName: groupName,
     };
 }
 
-/**
- *
- * @param {number} id - the image id
- * @param {number} author - the id of image uploader
- * @param {string} url - the url of the image
- * @param {string} alt - Alt text
- * @param status
- */
-export function newImage(id, author, url, alt, status) {
-    return {
-        _type: 'image',
-        id: id,
-        author: author,
-        url: url,
-        alt: alt,
-        status: status
-    };
-}
-
-/**
- *
- * @param {number} id - the annotation's id
- * @param {number} userId - the annotator's id
- * @param {number} start - the position of the start character of annotation
- * @param {number} end - the position of the last character of annotation
- * @param {string} annotation - the annotation text
- * @param {number[]} likes - the ids of users who likes this annotation
- * @param {number} status - the status of the annotation (e.g. public, private, deleted)
- */
-export function newAnnotation(id, userId, start, end, annotation, likes, status) {
-    return {
-        _type: 'annotation',
-        id: id,
-        userId: userId,
-        start: start,
-        end: end,
-        annotation: annotation,
-        likes: likes,
-        status: status
-    };
-}
 
 /**
  *
@@ -243,8 +164,12 @@ export function newAnnotation(id, userId, start, end, annotation, likes, status)
  * @param {number} id the value of id
  * @return {Object}
  */
-export async function getData(target, id) {
+export async function getDataById(target, id) {
     return await db.get(target, {id: id});
+}
+
+export async function getData(target, query) {
+    return await db.get(target, query);
 }
 
 /**
@@ -256,7 +181,7 @@ export async function getData(target, id) {
  */
 export async function getPartialData(target, id, ...elements) {
     let obj = {};
-    const variable = await getData(target, id);
+    const variable = await getDataById(target, id);
     elements.forEach(param => obj[param] = variable[param]);
     return obj;
 }
@@ -274,27 +199,27 @@ export async function newId(target) {
 }
 
 export async function addData(newValue) {
-    await db.post(Target[newValue._type], newValue);
+    return await db.post(Target[newValue._type], newValue);
 }
 
 async function newCommentId(parentIds) {
-    let comment = await getData(Target.article, parentIds[0]).comments;
+    let comment = await getDataById(Target.article, parentIds[0]).comments;
     for (let i = 1; i < parentIds.length; i++) {
-        comment = comment[parentIds[i]].reply;
+        comment = comment[parentIds[i]].replies;
     }
     return comment.length;
 }
 
 export async function addComments(parentIds, userId, content) {
-    let [commentId, parent] = await solve([newCommentId(parentIds), getData(Target.articles, parentIds[0])]);
+    let [commentId, parent] = await solve([newCommentId(parentIds), getDataById(Target.articles, parentIds[0])]);
     const comment = await newComment(
         parentIds.concat(commentId),
-        content,
         userId,
+        content,
         [],
-        [],
+        0,
+        0,
         new Date(),
-        []
     );  // create the comment object
 
     const newValue = parent;
@@ -306,60 +231,11 @@ export async function addComments(parentIds, userId, content) {
 
     parent = parent.comments;  // if this comment is a reply
     for (let i=1; i<parentIds.length; i++) {
-        parent = parent[parentIds[i]].reply;  // find the parent of this reply
+        parent = parent[parentIds[i]].replies;  // find the parent of this reply
     }
     parent.push(comment);  // add this reply to the parent
     await db.put(Target.article, {id: parentIds[0]}, newValue);
     return comment;
-}
-
-/**
- *
- * @param {number} articleId
- * @param {number} userId
- * @param {number} start
- * @param {number} end
- * @param {string} content
- * @param {number} status
- */
-export async function addAnnotations(articleId, userId, start, end, content, status) {
-    const article = await getData(Target.article, articleId);
-    article.annotations.push(newAnnotation(
-        article.annotations.length,
-        userId,
-        start,
-        end,
-        content,
-        [],
-        status
-    ));
-    await updateData(article);
-}
-
-/**
- * !!STUB!!
- *
- * @param {string} image
- * @returns {string}
- */
-async function storeImage(image) {
-    /*
-    Validation, virus scan, cropping over-sized images, storing, etc. to be performed here.
-     */
-    const result = await db.post(Target.image, {image: image});
-    return result.url;
-}
-
-export async function addImages(authorId, image, alt, status) {
-    const [url, id] = await solve([storeImage(image), newId(Target.image)]);
-    const img = newImage(
-        id,
-        authorId,
-        url,
-        alt,
-        status
-    );
-    await db.post(Target.image, img);
 }
 
 export async function getUserBy(type, value) {
@@ -390,5 +266,9 @@ export async function search(searchTerm) {
         author: e.author,
         title: e.title,
         content: e.content,
-        initialCreateTime: e.initialCreateTime}));
+        publishTime: e.publishTime}));
+}
+
+export async function removeRecord(type, query) {
+    return await db.remove(type, query);
 }

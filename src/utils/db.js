@@ -74,4 +74,11 @@ export class DBConnection {
             return await this.db.collection(type).count();
         });
     }
+
+    async remove(type, query) {
+        await this.assertConnect();
+        return await this.execute(async () => {
+            return await this.db.collection(type).deleteOne(query);
+        })
+    }
 }

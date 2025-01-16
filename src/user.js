@@ -1,6 +1,6 @@
 import {
     updateData,
-    getData,
+    getDataById,
     newId,
     newUser,
     getUserBy,
@@ -12,12 +12,11 @@ import {
 
 import {
     isValidEmail,
-    isValidName,
     isValidPassword,
     isValidUsername
 } from "./utils/validations.js";
 
-import {Status, Target} from "./const.js";
+import {Target} from "./const.js";
 import {solve} from "./utils/asyncUtils.js";
 
 /**
@@ -56,28 +55,22 @@ export async function userSignup(email, password, username) {
 
     await addData(newUser(
         id,
-        Status.public,
-        [],
-        [],
-        {},  // to be added in future
-        0,
-        [],
-        [],
         username,
-        'firstname', // missing firstname
-        'lastname', // missing lastname
         email,
         password,
-        0,
-        new Date(),
         [],
-        [],  // missing session id
-        0,
-        0,
-        0,
+        "",
         [],
         [],
         [],
+        {
+            newFollower: false,
+            newComment: false,
+            newMessage: false,
+        },
+        "",
+        0,
+        0,
         [],
         []
     ));
@@ -121,7 +114,7 @@ export async function userSignIn(email, password) {
  * if the registration is successful
  */
 export async function userSignOut(userId, sessionId) {
-    const user = await getData(Target.user, userId);
+    const user = await getDataById(Target.user, userId);
 
     if (user === null) {
         throw new Error("This user is not signed in.");
@@ -138,60 +131,73 @@ export async function userSignOut(userId, sessionId) {
 }
 
 export async function userDetail(id) {
-    const user = await getData(Target.user, id);
+    const user = await getDataById(Target.user, id);
     if (user === null) {
         throw new Error("The user doesn't exist.");
     }
     return user;
 }
 
-export async function userDetailUpdate(userId, username, nameFirst, nameLast) {
-    if (!isValidName(nameFirst)) {
-        throw new Error('Invalid first name, you must enter at lease 3 characters.');
-    }
-    if (!isValidName(nameLast)) {
-        throw new Error('Invalid last name, you must enter at lease 3 characters');
-    }
+export async function userDetailUpdate(userId, avatar, username, bio, email, preference) {
 
-    const user = await getData(Target.user, userId);
+    const [user, emailExists, usernameExists] = await solve(getDataById(Target.user, userId), getUserBy('email', email), getUserBy('username', username));
 
     if (user === null) {
         throw new Error("The user doesn't exist.");
     }
 
-    user.username = username;
-    user.nameFirst = nameFirst;
-    user.nameLast = nameLast;
+    let errors = "";
+
+    if (usernameExists && username !== user.username) {
+        errors += "The username already exists.\n";
+    } else {
+        user.username = username;
+    }
+
+    if (emailExists && email !== user.email) {
+        errors += "The email already exists.\n";
+    } else {
+        user.email = email;
+    }
+
+    user.avatar = avatar;
+    user.bio = bio;
+    user.emailPreference = preference;
 
     await updateData(user);
+
+    if (errors !== "") {
+        throw new Error(errors + "All other fields have been updated");
+    }
+
     return {};
 }
 
-export async function userEmailUpdate(userId, newEmail) {
-    if (!isValidEmail(newEmail)) {
-        throw new Error('Invalid email format.');
-    }
-
-    const [user, email] = await solve(getData(Target.user, userId), getUserBy('email', newEmail));
-
-    if (user === null) {
-        throw new Error("The user doesn't exist.");
-    }
-
-    if (email) {
-        throw new Error('This email has already being used.');
-    }
-    user.email = newEmail;
-    await updateData(user);
-    return {};
-}
+// export async function userEmailUpdate(userId, newEmail) {
+//     if (!isValidEmail(newEmail)) {
+//         throw new Error('Invalid email format.');
+//     }
+//
+//     const [user, email] = await solve(getDataById(Target.user, userId), getUserBy('email', newEmail));
+//
+//     if (user === null) {
+//         throw new Error("The user doesn't exist.");
+//     }
+//
+//     if (email) {
+//         throw new Error('This email has already being used.');
+//     }
+//     user.email = newEmail;
+//     await updateData(user);
+//     return {};
+// }
 
 export async function userPasswordUpdate(userId, oldPassword, newPassword) {
     if (!isValidPassword(newPassword)) {
         throw new Error('Password too weak, you must have at least 6 characters with at least 1 number or 1 letter.');
     }
 
-    let user = await getData(Target.user, userId);
+    let user = await getDataById(Target.user, userId);
 
     if (user === null) {
         throw new Error("The user doesn't exist.");
@@ -211,7 +217,7 @@ export async function userPasswordUpdate(userId, oldPassword, newPassword) {
 }
 
 export async function userDelete(userId, password) {
-    let user = await getData(Target.user, userId);
+    let user = await getDataById(Target.user, userId);
 
     if (user === null) {
         throw new Error("The user doesn't exist.");
@@ -221,8 +227,21 @@ export async function userDelete(userId, password) {
         throw new Error("The password doesn't match the existing password.");
     }
 
-    user.status = Status.deletedByUser; // change in future to allow more deletion reasons.
+    user.username = "This Account Has Been Deleted"; // change in future
 
     await updateData(user);
     return {};
 }
+
+// export async function updateEmailPreference(userId, preference) {
+//     let user = await getDataById(Target.user, userId);
+//
+//     if (user === null) {
+//         throw new Error("The user doesn't exist.");
+//     }
+//
+//     user.emailPreference = preference;
+//
+//     await updateData(user);
+//     return {};
+// }

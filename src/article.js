@@ -2,7 +2,7 @@ import {
     updateData,
     newId,
     addComments,
-    getData,
+    getDataById,
     newArticle,
     addData
 } from "./data.js";
@@ -15,7 +15,7 @@ import {
     isValidSummary
 } from "./utils/validations.js";
 
-import {Status, Target} from "./const.js";
+import {Target} from "./const.js";
 import {solve} from "./utils/asyncUtils.js";
 
 
@@ -38,6 +38,10 @@ function validate(session, name, summary, content) {
     return true;
 }
 
+function calculateReadTime(content) {  // STUB!!
+    return Math.ceil(content.length / 100)/10;
+}
+
 async function getAuthorId(session) {  // to be replaced in future
     return parseInt(session);  // STUB!
 }
@@ -52,7 +56,7 @@ async function getAuthorId(session) {  // to be replaced in future
  * @param {boolean} long - If this article is long
  * @param {number} price
  * @param {string[]} tags
- * @param {int} previousArticleId - Previous chapter's article's id
+ * @param {number} previousArticleId - Previous chapter's article's id
  * @returns return empty object if upload success
  */
 export async function articleUpload(session, title, summary, content, long, price,
@@ -61,36 +65,36 @@ export async function articleUpload(session, title, summary, content, long, pric
     validate(session, title, summary, content);
 
     const [validPreArticleId, articleId, authorId] = await solve(isValidArticle(previousArticleId), newId(Target.article), getAuthorId(session));
-    const authorPromise = getData(Target.user, authorId);
+    const authorPromise = getDataById(Target.user, authorId);
     const date = new Date();
 
     if (validPreArticleId) {
-        let previous = await getData(Target.article, previousArticleId);
-        previous.nextChap = articleId;
+        let previous = await getDataById(Target.article, previousArticleId);
+        previous.next = articleId;
         await updateData(previous);
     }
 
     await addData(newArticle(
         articleId,
-        Status.public,  // change in future to allow the author to set the visibility when uploading the article
+        authorId,
+        "",
         title,
         summary,
         content,
-        authorId,
-        date,
-        date,
-        -1,
-        0,
-        [],
-        [],
         long,
+        date,
+        date,
+        0,
+        0,
+        calculateReadTime(content),
+        [],
+        validPreArticleId? previousArticleId : -1,
+        -1,
         price,
         tags,
-        [], // comments set to an empty array
-        []
     ));
     const author = await authorPromise;
-    author.publishedArticles.push(articleId);
+    author.publications.push(articleId);
     await updateData(author);
     return {};
 }
@@ -103,16 +107,16 @@ export async function articleUpload(session, title, summary, content, long, pric
  * @param {string} summary - The new article's summary
  * @param {string} content - The new article's text content
  * @param {number} rating
- * @param {boolean} long
+ * @param {boolean} isSeries
  * @param {number} price
  * @param {string[]} tags
  * @param {number} targetArticleId
  * @param {number} nextArticle - the id of the next article
  */
-export async function articleUpdate(session, title, summary, content, rating, long, price, tags, targetArticleId, nextArticle) {
+export async function articleUpdate(session, title, summary, content, rating, isSeries, price, tags, targetArticleId, nextArticle) {
     validate(session, title, summary, content);
 
-    const [validNextArticle, article] = await solve(isValidArticle(nextArticle), getData(Target.article, targetArticleId));
+    const [validNextArticle, article] = await solve(isValidArticle(nextArticle), getDataById(Target.article, targetArticleId));
 
     if ((!validNextArticle && nextArticle >= 0) || article === null) {
         throw new Error("Invalid article Id.");
@@ -120,28 +124,28 @@ export async function articleUpdate(session, title, summary, content, rating, lo
 
     await updateData(newArticle(
         targetArticleId,
-        article.status,  // change in future to enable status change (e.g. from public to private or delete it)
+        article.author,
+        article.cover,
         title,
         summary,
         content,
-        article.author,
-        article.initialCreateTime,
+        isSeries,
+        article.publishTime,
         new Date(),
-        nextArticle,
-        rating,
-        [],
-        [],
-        long,
-        price,
-        tags,
+        article.likes,
+        article.dislikes,
+        calculateReadTime(content),
         article.comments,
-        article.annotations
+        article.previous,
+        nextArticle,
+        price,
+        tags
     ));
     return {};
 }
 
 export async function getArticleDetails(articleId) {
-    return await getData(Target.article, articleId);
+    return await getDataById(Target.article, articleId);
 }
 
 /**
@@ -153,4 +157,23 @@ export async function getArticleDetails(articleId) {
  */
 export async function addComment(articleId, userId, commentContent) {
     return await addComments(articleId, userId, commentContent);
+}
+
+export async function bookmark(articleId, userId) {
+    const [article, user] = await solve(getDataById(Target.article, articleId), getDataById(Target.user, userId));
+    if (!article) {
+        throw new Error('Invalid article ID.');
+    }
+    if (!user) {
+        throw new Error('Invalid user ID.');
+    }
+
+    const index = user.library.indexOf(articleId);
+    if (index > -1) {
+        user.library.splice(index, 1);
+    } else {
+        user.library.push(articleId);
+    }
+    await updateData(user);
+    return {};
 }

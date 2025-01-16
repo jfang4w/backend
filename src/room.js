@@ -1,38 +1,30 @@
 import {
     newId,
     updateData,
-    getData,
-    newRoom,
+    getDataById,
+    newChat,
     newMessage
 } from "./data.js";
-import {Status, Target} from "./const.js";
+import {Target} from "./const.js";
 
 export async function createRoom(uid, roomName) {
-    await updateData(newRoom(
+    await updateData(newChat(
         await newId(Target.room),
         uid,
-        {},
+        [],
+        new Date(),
         roomName,
-        Status.active,
-        []
     ));
 }
 
-export async function changeNickname(uid, roomId, nickname) {
-    const room = await getData(Target.room, roomId);
-    room.nicknames[uid] = nickname;
-    await updateData(room);
-}
-
 export async function sendMessage(roomId, author, message) {
-    let room = await getData(Target.room, roomId);
+    let room = await getDataById(Target.room, roomId);
 
     if (author in room.uid) {
         room.message.push(newMessage(
             author,
-            null, // change in future to allow quote
-            message,
-            new Date()));
+            new Date(),
+            message));
         await updateData(room);
         return;
     }
@@ -40,5 +32,5 @@ export async function sendMessage(roomId, author, message) {
 }
 
 export async function getRoom(roomId) {
-    return await getData(Target.room, roomId);
+    return await getDataById(Target.room, roomId);
 }
