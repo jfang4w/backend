@@ -176,10 +176,10 @@ export async function getData(target, query) {
  *
  * @param {string} target what data is getting (users/articles/rooms)
  * @param {number} id the value of id
- * @param {...string} elements the elements required
+ * @param {string[]} elements the elements required
  * @returns {{}}
  */
-export async function getPartialData(target, id, ...elements) {
+export async function getPartialData(target, id, elements) {
     let obj = {};
     const variable = await getDataById(target, id);
     elements.forEach(param => obj[param] = variable[param]);
