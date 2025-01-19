@@ -84,8 +84,8 @@ export async function articleUpload(session, title, summary, content, long, pric
         long,
         date,
         date,
-        0,
-        0,
+        [],
+        [],
         calculateReadTime(content),
         [],
         validPreArticleId? previousArticleId : -1,
@@ -106,14 +106,13 @@ export async function articleUpload(session, title, summary, content, long, pric
  * @param {string} title - The new article's name
  * @param {string} summary - The new article's summary
  * @param {string} content - The new article's text content
- * @param {number} rating
  * @param {boolean} isSeries
  * @param {number} price
  * @param {string[]} tags
  * @param {number} targetArticleId
  * @param {number} nextArticle - the id of the next article
  */
-export async function articleUpdate(session, title, summary, content, rating, isSeries, price, tags, targetArticleId, nextArticle) {
+export async function articleUpdate(session, title, summary, content, isSeries, price, tags, targetArticleId, nextArticle) {
     validate(session, title, summary, content);
 
     const [validNextArticle, article] = await solve(isValidArticle(nextArticle), getDataById(Target.article, targetArticleId));

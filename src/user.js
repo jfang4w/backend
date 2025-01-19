@@ -233,6 +233,30 @@ export async function userDelete(userId, password) {
     return {};
 }
 
+export async function follow(targetId, followerId) {
+    const [target, follower] = await solve(getDataById(Target.user, targetId), getDataById(Target.user, followerId));
+    if (follower.following.indexOf(targetId) === -1) {
+        follower.following.push(targetId);
+        target.followers.push(followerId);
+    } else {
+        follower.following.splice(follower.following.indexOf(targetId), 1);
+        target.followers.splice(target.followers.indexOf(followerId), 1);
+    }
+    await solve(updateData(target), updateData(follower));
+    return {};
+}
+
+export async function like(articleId, likerId) {
+    const article = await getDataById(Target.article, articleId);
+    if (article.likes.indexOf(likerId) === -1) {
+        article.likes.push(likerId);
+    } else {
+        article.likes.splice(article.likes.indexOf(likerId), 1);
+    }
+    await updateData(article);
+    return {};
+}
+
 // export async function updateEmailPreference(userId, preference) {
 //     let user = await getDataById(Target.user, userId);
 //

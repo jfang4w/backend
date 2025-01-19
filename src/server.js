@@ -14,7 +14,7 @@ import {
     userDetail,
     userDetailUpdate,
     userPasswordUpdate,
-    userDelete,
+    userDelete, follow, like,
 } from "./user.js";
 
 import {
@@ -246,8 +246,8 @@ app.post('/v1/verifyCode', async (req, res) => {
 
 app.post('/v2/:type/:action/:id', async (req, res) => {
     const type = req.params.type;
-    const id = parseInt(req.params.id);
     const action = req.params.action;
+    const id = parseInt(req.params.id);
     const { requestFields, responseFields } = req.body;
     try {
         const responseBody = await (async () => {
@@ -276,12 +276,13 @@ app.post('/v2/:type/:action/:id', async (req, res) => {
                                 requestFields.title,
                                 requestFields.summary,
                                 requestFields.content,
-                                NaN,  // Rating
                                 JSON.parse(requestFields.long),
                                 parseFloat(requestFields.price),
                                 requestFields.tags,
                                 id,
                                 parseInt(requestFields.preId));
+                        case "like":
+                            return await like(id, requestFields.id);
                         default:
                             throw new Error(`Invalid action "${action}" for article`);
                     }
@@ -299,12 +300,14 @@ app.post('/v2/:type/:action/:id', async (req, res) => {
                                 requestFields.preference);
                         case "delete":
                             return await userDelete(id, requestFields.password);
+                        case "follow":
+                            return await follow(id, requestFields.id);
                         default:
                             throw new Error(`Invalid action "${action}" for user`);
                     }
                 case "auth":
                     switch (action) {
-                        case "signup":
+                        case "register":
                             return await userSignup(
                                 requestFields.email,
                                 requestFields.password,

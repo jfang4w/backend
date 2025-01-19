@@ -92,8 +92,8 @@ export async function newComment(id, author, body, replies, likes, dislikes, com
  * @param {boolean} isSeries
  * @param {Date} publishTime
  * @param {Date} lastEdit
- * @param {number} likes
- * @param {number} dislikes
+ * @param {number[]} likes
+ * @param {number[]} dislikes
  * @param {number} readTime
  * @param {Comment[]} comments
  * @param {number} previous
